@@ -1,8 +1,9 @@
 <?xml version="1.0"?>
 <!-- Originally created by Aptara, Technology Group  -->
 <!-- Revised by CrossRef to accomodate NISO JATS 1.0  -->
+<!-- Simplified by Christopher Brown to support XSL 1.0  -->
 
-<xsl:stylesheet version="2.0"
+<xsl:stylesheet version="1.0"
 				xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 				xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 				xmlns:xs="http://www.w3.org/2001/XMLSchema"
@@ -15,8 +16,8 @@
 			indent="yes"
 			encoding="UTF-8"/>
 
-<xsl:variable name="date" select="adjust-date-to-timezone(current-date(), ())"/>
-<xsl:variable name="time" select="adjust-time-to-timezone(current-time(), ())"/>
+<xsl:variable name="date">19700101</xsl:variable>
+<xsl:variable name="time">000000</xsl:variable>
 <xsl:variable name="tempdatetime" select="concat($date,'',$time)"/>
 <xsl:variable name="datetime" select="translate($tempdatetime,':-.','')"/>
 
