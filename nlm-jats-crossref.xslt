@@ -3,17 +3,17 @@
 <!-- Revised by CrossRef to accomodate NISO JATS 1.0  -->
 
 <xsl:stylesheet version="2.0"
-                xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-                xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+				xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+				xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				xmlns:xs="http://www.w3.org/2001/XMLSchema"
 				xmlns="http://www.crossref.org/schema/4.3.1"
-				xmlns:xsldoc="http://www.bacman.net/XSLdoc" 
+				xmlns:xsldoc="http://www.bacman.net/XSLdoc"
 				xmlns:xlink="http://www.w3.org/1999/xlink"
 				exclude-result-prefixes="xsldoc">
 
-<xsl:output method="xml" 
-            indent="yes" 
-            encoding="UTF-8"/>
+<xsl:output method="xml"
+			indent="yes"
+			encoding="UTF-8"/>
 
 <xsl:variable name="date" select="adjust-date-to-timezone(current-date(), ())"/>
 <xsl:variable name="time" select="adjust-time-to-timezone(current-time(), ())"/>
@@ -27,7 +27,7 @@
 	<xsl:choose>
 		<xsl:when test="article">
 			<doi_batch version="4.3.1">
-				<xsl:attribute name="xsi:schemaLocation">http://www.crossref.org/schema/4.3.1 
+				<xsl:attribute name="xsi:schemaLocation">http://www.crossref.org/schema/4.3.1
 					http://www.crossref.org/schema/deposit/crossref4.3.1.xsd</xsl:attribute>
 				<head>
 					<xsl:apply-templates select="//front"/>
@@ -485,7 +485,7 @@
 				</xsl:if>
 				<xsl:if test="year">
 					<cYear>
-						<xsl:value-of select="replace(year, '[a-zA-Z]', '')" /> 
+						<xsl:value-of select="replace(year, '[a-zA-Z]', '')" />
 					</cYear>
 				</xsl:if>
 				<xsl:if test="article-title">
@@ -518,7 +518,7 @@
 				</xsl:if>
 				<xsl:if test="year">
 					<cYear>
-						<xsl:value-of select="replace(year, '[a-zA-Z]', '')" /> 
+						<xsl:value-of select="replace(year, '[a-zA-Z]', '')" />
 					</cYear>
 				</xsl:if>
 				<xsl:if test="article-title">
