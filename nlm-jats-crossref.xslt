@@ -11,17 +11,15 @@
 <!-- Simplified by Christopher Brown to support XSL 1.0 -->
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.crossref.org/schema/4.3.6" xmlns:xsldoc="http://www.bacman.net/XSLdoc" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.0" exclude-result-prefixes="xsldoc">
   <xsl:output method="xml" indent="yes" encoding="UTF-8"/>
-  <xsl:variable name="date">19700101</xsl:variable>
-  <xsl:variable name="time">000000</xsl:variable>
-  <xsl:variable name="tempdatetime" select="concat($date,'',$time)"/>
-  <xsl:variable name="datetime" select="translate($tempdatetime,':-.','')"/>
+  <xsl:param name="timestamp">19700101000000</xsl:param>
+  <xsl:param name="email">labs-notifications@crossref.org</xsl:param>
   <!-- ========================================================================== -->
   <!-- Root Element                                                               -->
   <!-- ========================================================================== -->
   <xsl:template match="/">
     <xsl:choose>
       <xsl:when test="article">
-        <doi_batch xmlns="http://www.crossref.org/schema/4.3.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:fr="http://www.crossref.org/fundref.xsd" version="4.3.6" xsi:schemaLocation="http://www.crossref.org/schema/4.3.6 http://www.crossref.org/schema/deposit/crossref4.3.6.xsd">
+        <doi_batch xmlns="http://www.crossref.org/schema/4.3.6" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:fr="http://www.crossref.org/fundref.xsd" version="4.3.6" xsi:schemaLocation="http://www.crossref.org/schema/4.3.6 http://www.crossref.org/schema/deposit/crossref4.3.6.xsd">
           <head>
             <xsl:apply-templates select="//front"/>
           </head>
@@ -81,7 +79,7 @@
       </xsl:choose>
     </doi_batch_id>
     <timestamp>
-      <xsl:value-of select="$datetime"/>
+      <xsl:value-of select="$timestamp"/>
     </timestamp>
     <depositor>
       <depositor_name>
@@ -94,9 +92,8 @@
           </xsl:otherwise>
         </xsl:choose>
       </depositor_name>
-      <!--there is no appropriate place in NLM/JATS XML for a CrossRef deposit email, this will be added during processing (method TBD)-->
       <email_address>
-        <!--email address TBD-->
+        <xsl:value-of select="$email"/>
       </email_address>
     </depositor>
     <registrant>
@@ -165,94 +162,29 @@
   <!-- ISSN                                                                       -->
   <!-- ========================================================================== -->
   <xsl:template match="issn">
-    <xsl:if test="@pub-type='ppub' or @pub-type='pub'">
-      <issn media_type="print">
-        <xsl:apply-templates/>
-      </issn>
-    </xsl:if>
-    <xsl:if test="@pub-type='epub' or @pub-type='epub-ppub'">
-      <issn media_type="electronic">
-        <xsl:apply-templates/>
-      </issn>
-    </xsl:if>
-    <xsl:if test="not(@pub-type)">
-      <issn media_type="print">
-        <xsl:apply-templates/>
-      </issn>
-    </xsl:if>
+    <issn media_type="{@publication-format}">
+      <xsl:apply-templates/>
+    </issn>
   </xsl:template>
   <!-- ========================================================================== -->
   <!-- Publication Date                                                           -->
   <!-- ========================================================================== -->
   <xsl:template match="pub-date">
-    <xsl:if test="@pub-type='ppub' or @pub-type='pub'">
-      <publication_date media_type="print">
-        <xsl:if test="month">
-          <month>
-            <xsl:apply-templates select="month"/>
-          </month>
-        </xsl:if>
-        <xsl:if test="day">
-          <day>
-            <xsl:apply-templates select="day"/>
-          </day>
-        </xsl:if>
-        <year>
-          <xsl:apply-templates select="year"/>
-        </year>
-      </publication_date>
-    </xsl:if>
-    <xsl:if test="@pub-type='epub' or @pub-type='epub-ppub'">
-      <publication_date media_type="online">
-        <xsl:if test="month">
-          <month>
-            <xsl:apply-templates select="month"/>
-          </month>
-        </xsl:if>
-        <xsl:if test="day">
-          <day>
-            <xsl:apply-templates select="day"/>
-          </day>
-        </xsl:if>
-        <year>
-          <xsl:apply-templates select="year"/>
-        </year>
-      </publication_date>
-    </xsl:if>
-    <xsl:if test="not(@pub-type)">
-      <publication_date media_type="print">
-        <xsl:if test="month">
-          <month>
-            <xsl:apply-templates select="month"/>
-          </month>
-        </xsl:if>
-        <xsl:if test="day">
-          <day>
-            <xsl:apply-templates select="day"/>
-          </day>
-        </xsl:if>
-        <year>
-          <xsl:apply-templates select="year"/>
-        </year>
-      </publication_date>
-    </xsl:if>
-    <xsl:if test="not(@pub-type='epub' or @pub-type='epub-ppub' or @pub-type='ppub' or @pub-type='pub')">
-      <publication_date media_type="print">
-        <xsl:if test="month">
-          <month>
-            <xsl:apply-templates select="month"/>
-          </month>
-        </xsl:if>
-        <xsl:if test="day">
-          <day>
-            <xsl:apply-templates select="day"/>
-          </day>
-        </xsl:if>
-        <year>
-          <xsl:apply-templates select="year"/>
-        </year>
-      </publication_date>
-    </xsl:if>
+    <publication_date media_type="{@publication-format}">
+      <xsl:if test="month">
+        <month>
+          <xsl:apply-templates select="month"/>
+        </month>
+      </xsl:if>
+      <xsl:if test="day">
+        <day>
+          <xsl:apply-templates select="day"/>
+        </day>
+      </xsl:if>
+      <year>
+        <xsl:apply-templates select="year"/>
+      </year>
+    </publication_date>
   </xsl:template>
   <!-- ========================================================================== -->
   <!-- Volume/Issue                                                               -->
@@ -484,7 +416,7 @@
     </citation_list>
   </xsl:template>
   <xsl:template match="ref">
-    <xsl:variable name="key" select="concat($datetime,'_',@id)"/>
+    <xsl:variable name="key" select="concat($timestamp,'_',@id)"/>
     <citation>
       <xsl:attribute name="key">key<xsl:value-of select="$key"/></xsl:attribute>
       <xsl:apply-templates select="element-citation"/>
