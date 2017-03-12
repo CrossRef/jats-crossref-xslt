@@ -2,27 +2,29 @@
 
 ## What is this?
 
-This repository contains an XSLT file that will translate [NISO NLM or JATS](http://jats.nlm.nih.gov/versions.html)
-to [CrossRef Deposit XML](http://help.crossref.org/deposit_schema).
+This repository contains an XSLT file that will translate [NISO NLM or JATS](https://jats.nlm.nih.gov/versions.html)
+to [CrossRef Deposit XML](https://support.crossref.org/hc/en-us/articles/215577783-Creating-content-registration-XML).
+
 
 ## How do I use this?
 
-Either use CrossRef's [Web Deposit Form](http://www.crossref.org/webDeposit/) to deposit NISO NLM or JATS manually
-or build the XSLT into a CrossRef deposit process using JAXP or your favourite language's XML and XSLT processing library.
+Either use CrossRef's [Web Deposit Form](https://www.crossref.org/webDeposit/) to deposit NISO NLM or JATS manually
+or build the XSLT into a CrossRef deposit process using JAXP or your favorite language's XML and XSLT processing library.
 
-A commandline XSLT processor can be used for diagnositc and experimental purposes:
+A command line XSLT processor can be used for diagnostic and experimental purposes:
 
-- http://xml.apache.org/xalan-j/commandline.html
-- http://xmlsoft.org/XSLT/xsltproc.html
+- [Xalan Java](http://xml.apache.org/xalan-j/commandline.html)
+- [xsltproc](http://xmlsoft.org/XSLT/xsltproc.html)
+
 
 ## Supported NLM / JATS Versions
 
-Currently the following NLM and JATS [versions](http://jats.nlm.nih.gov/versions.html) are supported:
+Currently the following NLM and JATS [versions](https://jats.nlm.nih.gov/versions.html) are supported:
 
-| Version  | Notes   |
-|----------|---------|
-| [NLM 2.3](http://dtd.nlm.nih.gov/2.3/) |         |
-| [NLM 3.0](http://dtd.nlm.nih.gov/3.0/) |         |
+| Version                                  | Notes   |
+|------------------------------------------|---------|
+| [NLM 2.3](http://dtd.nlm.nih.gov/2.3/)   |         |
+| [NLM 3.0](http://dtd.nlm.nih.gov/3.0/)   |         |
 | [JATS 1.0](http://jats.nlm.nih.gov/1.0/) |         |
 
 
@@ -33,6 +35,7 @@ Currently the following NLM and JATS [versions](http://jats.nlm.nih.gov/versions
 ###  Funding
 
 ###  Identifiers
+
 
 ## Contributing
 
