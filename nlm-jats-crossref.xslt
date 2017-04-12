@@ -13,6 +13,7 @@
   <xsl:output method="xml" indent="yes" encoding="UTF-8"/>
   <xsl:param name="timestamp">19700101000000</xsl:param>
   <xsl:param name="email">labs-notifications@crossref.org</xsl:param>
+  <xsl:variable name="alphabet">abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ</xsl:variable>
   <!-- ========================================================================== -->
   <!-- Root Element                                                               -->
   <!-- ========================================================================== -->
@@ -461,7 +462,7 @@
         </xsl:if>
         <xsl:if test="year">
           <cYear>
-            <xsl:value-of select="replace(year, '[a-zA-Z]', '')"/>
+            <xsl:value-of select="translate(year, $alphabet, '')"/>
           </cYear>
         </xsl:if>
         <xsl:if test="article-title">
@@ -494,7 +495,7 @@
         </xsl:if>
         <xsl:if test="year">
           <cYear>
-            <xsl:value-of select="replace(year, '[a-zA-Z]', '')"/>
+            <xsl:value-of select="translate(year, $alphabet, '')"/>
           </cYear>
         </xsl:if>
         <xsl:if test="article-title">
