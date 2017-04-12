@@ -131,8 +131,7 @@
         </xsl:when>
         <xsl:otherwise>
           <full_title>
-            <xsl:message terminate="yes">Journal full title is not available in the
-							Input file</xsl:message>
+            <xsl:message terminate="yes">Journal full title is not available in the Input file</xsl:message>
           </full_title>
         </xsl:otherwise>
       </xsl:choose>
@@ -148,8 +147,7 @@
           <xsl:apply-templates select="issn"/>
         </xsl:when>
         <xsl:otherwise>
-          <xsl:message terminate="yes">ISSN is not available in the Input
-						file</xsl:message>
+          <xsl:message terminate="yes">ISSN is not available in the Input file</xsl:message>
         </xsl:otherwise>
       </xsl:choose>
       <xsl:if test="../article-meta/article-id[@pub-id-type='coden']">
@@ -232,8 +230,7 @@
               <xsl:apply-templates select="//article-meta/article-id[@pub-id-type='doi']"/>
             </xsl:when>
             <xsl:otherwise>
-              <xsl:message terminate="yes">DOI entry is not available in the
-								Input/Meta file(s)</xsl:message>
+              <xsl:message terminate="yes">DOI entry is not available in the Input/Meta file(s)</xsl:message>
             </xsl:otherwise>
           </xsl:choose>
         </doi>
@@ -266,11 +263,13 @@
       <xsl:if test="position()=1">
         <person_name sequence="first" contributor_role="author">
           <xsl:apply-templates select="name"/>
-          <!--<xsl:if test="xref[@ref-type='aff' and @rid]">
-				<xsl:call-template name="multi-ref">
-					<xsl:with-param name="tokens" select="xref[@ref-type='aff']/@rid"/>
-				</xsl:call-template>
-			</xsl:if>-->
+          <!--
+            <xsl:if test="xref[@ref-type='aff' and @rid]">
+              <xsl:call-template name="multi-ref">
+                <xsl:with-param name="tokens" select="xref[@ref-type='aff']/@rid"/>
+              </xsl:call-template>
+            </xsl:if>
+          -->
           <xsl:if test="contrib-id[@contrib-id-type='orcid']">
             <ORCID>
               <xsl:apply-templates select="contrib-id"/>
@@ -281,11 +280,13 @@
       <xsl:if test="position()&gt;1">
         <person_name sequence="additional" contributor_role="author">
           <xsl:apply-templates select="name"/>
-          <!--<xsl:if test="xref[@ref-type='aff' and @rid]">
-				<xsl:call-template name="multi-ref">
-					<xsl:with-param name="tokens" select="xref[@ref-type='aff']/@rid"/>
-				</xsl:call-template>
-			</xsl:if>-->
+          <!--
+            <xsl:if test="xref[@ref-type='aff' and @rid]">
+              <xsl:call-template name="multi-ref">
+                <xsl:with-param name="tokens" select="xref[@ref-type='aff']/@rid"/>
+              </xsl:call-template>
+            </xsl:if>
+          -->
           <xsl:if test="contrib-id[@contrib-id-type='orcid']">
             <ORCID>
               <xsl:apply-templates select="contrib-id"/>
@@ -404,9 +405,10 @@
   <!-- Programs (FundRef)                                                     -->
   <!-- ========================================================================== -->
   <xsl:template name="fundref">
-    <!--<fr:program name="fundref">
-
-	</fr:program>-->
+    <!--
+      <fr:program name="fundref">
+      </fr:program>
+    -->
   </xsl:template>
   <!-- ========================================================================== -->
   <!-- Citations                                                                  -->
