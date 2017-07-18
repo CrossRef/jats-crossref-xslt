@@ -9,25 +9,33 @@
   -  8/5/2014 (PDF) shortened timestamp value to match web deposit value
 -->
 <!-- Simplified by Christopher Brown to support XSL 1.0 -->
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.crossref.org/schema/4.3.6" xmlns:xsldoc="http://www.bacman.net/XSLdoc" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.0" exclude-result-prefixes="xsldoc">
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns="http://www.crossref.org/schema/4.3.6"
+                xmlns:xsldoc="http://www.bacman.net/XSLdoc"
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                version="1.0" exclude-result-prefixes="xsldoc">
   <xsl:output method="xml" indent="yes" encoding="UTF-8"/>
   <xsl:param name="timestamp">19700101000000</xsl:param>
   <xsl:param name="email">labs-notifications@crossref.org</xsl:param>
   <xsl:variable name="alphabet">abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ</xsl:variable>
-  <!-- ========================================================================== -->
-  <!-- Root Element                                                               -->
-  <!-- ========================================================================== -->
+
   <xsl:template match="/">
     <xsl:choose>
       <xsl:when test="article">
-        <doi_batch xmlns="http://www.crossref.org/schema/4.3.6" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:fr="http://www.crossref.org/fundref.xsd" version="4.3.6" xsi:schemaLocation="http://www.crossref.org/schema/4.3.6 http://www.crossref.org/schema/deposit/crossref4.3.6.xsd">
+        <doi_batch xmlns="http://www.crossref.org/schema/4.3.6"
+                   xmlns:xlink="http://www.w3.org/1999/xlink"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns:fr="http://www.crossref.org/fundref.xsd"
+                   version="4.3.6"
+                   xsi:schemaLocation="http://www.crossref.org/schema/4.3.6
+                                       http://www.crossref.org/schema/deposit/crossref4.3.6.xsd">
           <head>
             <xsl:apply-templates select="//front"/>
           </head>
           <body>
             <journal>
               <xsl:apply-templates select="//journal-meta"/>
-              <xsl:if test="//pub-date|//article-meta/volume|//article-meta/issue">
+              <xsl:if test="//pub-date | //article-meta/volume | //article-meta/issue">
                 <journal_issue>
                   <xsl:apply-templates select="//pub-date"/>
                   <xsl:apply-templates select="//article-meta/volume"/>
@@ -44,9 +52,7 @@
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
-  <!-- ========================================================================== -->
-  <!-- Front Matter Element                                                       -->
-  <!-- ========================================================================== -->
+
   <xsl:template match="front">
     <doi_batch_id>
       <xsl:choose>
@@ -108,9 +114,7 @@
       </xsl:choose>
     </registrant>
   </xsl:template>
-  <!-- ========================================================================== -->
-  <!-- Journal Metadata Element                                                   -->
-  <!-- ========================================================================== -->
+
   <xsl:template match="journal-meta">
     <journal_metadata language="en">
       <xsl:choose>
@@ -157,17 +161,13 @@
       </xsl:if>
     </journal_metadata>
   </xsl:template>
-  <!-- ========================================================================== -->
-  <!-- ISSN                                                                       -->
-  <!-- ========================================================================== -->
+
   <xsl:template match="issn">
     <issn media_type="{@publication-format}">
       <xsl:apply-templates/>
     </issn>
   </xsl:template>
-  <!-- ========================================================================== -->
-  <!-- Publication Date                                                           -->
-  <!-- ========================================================================== -->
+
   <xsl:template match="pub-date">
     <publication_date media_type="{@publication-format}">
       <xsl:if test="month">
@@ -185,9 +185,7 @@
       </year>
     </publication_date>
   </xsl:template>
-  <!-- ========================================================================== -->
-  <!-- Volume/Issue                                                               -->
-  <!-- ========================================================================== -->
+
   <xsl:template match="//article-meta/volume">
     <journal_volume>
       <volume>
@@ -200,9 +198,7 @@
       <xsl:apply-templates/>
     </issue>
   </xsl:template>
-  <!-- ========================================================================== -->
-  <!-- Title Group                                                                -->
-  <!-- ========================================================================== -->
+
   <xsl:template match="//article-meta/title-group">
     <journal_article publication_type="full_text">
       <titles>
@@ -214,13 +210,15 @@
         <xsl:apply-templates select="../contrib-group"/>
       </xsl:if>
       <xsl:apply-templates select="//pub-date"/>
-      <xsl:if test="//article-meta/fpage|//article-meta/lpage">
-        <xsl:apply-templates select="//article-meta/fpage|//article-meta/lpage"/>
+      <xsl:if test="//article-meta/fpage | //article-meta/lpage">
+        <xsl:apply-templates select="//article-meta/fpage | //article-meta/lpage"/>
       </xsl:if>
       <xsl:if test="//article-meta/elocation-id">
         <xsl:apply-templates select="//article-meta/elocation-id"/>
       </xsl:if>
-      <xsl:if test="//article-id[@pub-id-type='doi']|//article-id[@pub-id-type='pii']|//article-id[@pub-id-type='sici']">
+      <xsl:if test="//article-id[@pub-id-type='doi'] |
+                    //article-id[@pub-id-type='pii'] |
+                    //article-id[@pub-id-type='sici']">
         <xsl:call-template name="publisher-item"/>
       </xsl:if>
       <doi_data>
@@ -248,9 +246,7 @@
       <xsl:apply-templates select="//back/ref-list"/>
     </journal_article>
   </xsl:template>
-  <!-- ========================================================================== -->
-  <!-- Article Contributors                                                       -->
-  <!-- ========================================================================== -->
+
   <xsl:template match="//article-meta/contrib-group">
     <xsl:if test="contrib">
       <contributors>
@@ -358,9 +354,7 @@
   </xsl:template>
   <xsl:template match="aff"> </xsl:template>
   <xsl:template match="aff/label"> </xsl:template>
-  <!-- ========================================================================== -->
-  <!-- Article Page Information                                                   -->
-  <!-- ========================================================================== -->
+
   <xsl:template match="article-meta/fpage">
     <pages>
       <first_page>
@@ -374,9 +368,7 @@
     </pages>
   </xsl:template>
   <xsl:template match="lpage"> </xsl:template>
-  <!-- ========================================================================== -->
-  <!-- Publication Identifier                                                     -->
-  <!-- ========================================================================== -->
+
   <xsl:template name="publisher-item">
     <publisher_item>
       <xsl:if test="//article-meta/elocation-id">
@@ -401,18 +393,14 @@
       </xsl:if>
     </publisher_item>
   </xsl:template>
-  <!-- ========================================================================== -->
-  <!-- Programs (FundRef)                                                     -->
-  <!-- ========================================================================== -->
+
   <xsl:template name="fundref">
     <!--
       <fr:program name="fundref">
       </fr:program>
     -->
   </xsl:template>
-  <!-- ========================================================================== -->
-  <!-- Citations                                                                  -->
-  <!-- ========================================================================== -->
+
   <xsl:template match="ref-list">
     <citation_list>
       <xsl:apply-templates select="ref"/>
@@ -428,12 +416,15 @@
       <xsl:apply-templates select="mixed-citation"/>
     </citation>
   </xsl:template>
-  <xsl:template match="element-citation|citation|nlm-citation|mixed-citation">
+  <xsl:template match="element-citation | citation | nlm-citation | mixed-citation">
     <xsl:choose>
       <xsl:when test="@publication-type='journal' or @citation-type='journal'">
         <xsl:if test="issn">
           <issn>
-            <xsl:value-of select="//element-citation/issn|//citation/issn|//nlm-citation/issn|//mixed-citation/issn"/>
+            <xsl:value-of select="//element-citation/issn |
+                                  //citation/issn |
+                                  //nlm-citation/issn |
+                                  //mixed-citation/issn"/>
           </issn>
         </xsl:if>
         <xsl:if test="source">
@@ -445,7 +436,7 @@
           <xsl:apply-templates select="collab"/>
         </xsl:if>
         <xsl:if test="person-group">
-          <xsl:apply-templates select="person-group/name|person-group/collab"/>
+          <xsl:apply-templates select="person-group/name | person-group/collab"/>
         </xsl:if>
         <xsl:if test="volume">
           <volume>
@@ -473,7 +464,10 @@
           </article_title>
         </xsl:if>
       </xsl:when>
-      <xsl:when test="@citation-type='book' or @citation-type='conf-proceedings' or @citation-type='confproc' or @citation-type='other' or @publication-type='book' or @publication-type='conf-proceedings' or @publication-type='confproc' or @publication-type='other'">
+      <xsl:when test="@citation-type='book' or @citation-type='conf-proceedings' or
+                      @citation-type='confproc' or @citation-type='other' or
+                      @publication-type='book' or @publication-type='conf-proceedings' or
+                      @publication-type='confproc' or @publication-type='other'">
         <xsl:if test="source">
           <volume_title>
             <xsl:apply-templates select="source"/>
@@ -483,7 +477,7 @@
           <xsl:apply-templates select="collab"/>
         </xsl:if>
         <xsl:if test="person-group">
-          <xsl:apply-templates select="person-group/name|person-group/collab"/>
+          <xsl:apply-templates select="person-group/name | person-group/collab"/>
         </xsl:if>
         <xsl:if test="edition">
           <edition_number>
