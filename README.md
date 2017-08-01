@@ -5,6 +5,8 @@
 This repository contains an XSLT file that will translate [NISO NLM or JATS](https://jats.nlm.nih.gov/versions.html)
 to [CrossRef Deposit XML](https://support.crossref.org/hc/en-us/articles/215577783-Creating-content-registration-XML).
 
+See <https://support.crossref.org/hc/en-us/articles/214169866> for the current official XSLT stylesheet.
+
 
 ## How do I use this?
 
