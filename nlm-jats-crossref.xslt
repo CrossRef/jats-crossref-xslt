@@ -30,7 +30,7 @@
                xmlns:fr="http://www.crossref.org/fundref.xsd"
                version="4.4.0"
                xsi:schemaLocation="http://www.crossref.org/schema/4.4.0
-                                   http://www.crossref.org/schema/deposit/crossref4.4.0.xsd">
+                                   https://www.crossref.org/schema/crossref4.4.0.xsd">
       <head>
         <xsl:apply-templates select="front"/>
       </head>
