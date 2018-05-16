@@ -1,14 +1,19 @@
 <?xml version="1.0"?>
-<!-- Originally created by Aptara, Technology Group -->
-<!-- Revised by CrossRef to accomodate NISO JATS 1.0 -->
-<!-- Revision log
-  -  5/6/16 added ORCID (PDF)
-  -  10/8/15 updated pub-date types, added elocation, udpated to 4.3.6 (PDF)
-  -  4/26/13 updated pub-date support (PDF)
-  -  updated to work with NISO JATS 1 (PDF)
-  -  8/5/2014 (PDF) shortened timestamp value to match web deposit value
+<!--
+Originally created by Aptara, Technology Group
+Revised by CrossRef to accomodate NISO JATS 1.0
+Improved by Christopher Brown to be compatible with XSLT 1.0 and latest schema
+Change log:
+* 2017-07-19 implement support for structured citations (CHB)
+* 2017-07-19 update to crossref4.4.0.xsd (CHB)
+* 2016-12-17 merged with updated NLM.JATS2Crossref.v3.1.xsl from Crossref (CHB)
+* 2016-12-04 simplified to support XSLT 1.0 (CHB)
+* 2016-05-06 added ORCID (PDF)
+* 2015-10-08 updated pub-date types, added elocation, udpated to 4.3.6 (PDF)
+* 2013-04-26 updated pub-date support (PDF)
+* updated to work with NISO JATS 1 (PDF)
+* 2014-08-05 shortened timestamp value to match web deposit value (PDF)
 -->
-<!-- Simplified by Christopher Brown to support XSL 1.0 -->
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns="http://www.crossref.org/schema/4.4.0"
                 xmlns:xsldoc="http://www.bacman.net/XSLdoc"
