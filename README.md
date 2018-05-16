@@ -7,6 +7,10 @@ to [CrossRef Deposit XML](https://support.crossref.org/hc/en-us/articles/2155777
 
 See <https://support.crossref.org/hc/en-us/articles/214169866> for the current official XSLT stylesheet.
 
+Direct links to content:
+* `nlm-jats-crossref.xslt`:
+  - [GitHub Raw (HTTPS)](https://raw.githubusercontent.com/semprag/jats-crossref-xslt/master/nlm-jats-crossref.xslt)
+
 
 ## How do I use this?
 
