@@ -28,7 +28,7 @@ Currently the following NLM and JATS [versions](http://jats.nlm.nih.gov/versions
 | [NLM 2.3](http://dtd.nlm.nih.gov/2.3/) |         |
 | [NLM 3.0](http://dtd.nlm.nih.gov/3.0/) |         |
 | [JATS 1.0](http://jats.nlm.nih.gov/1.0/) |         |
-| [JATS 1.2) (ftp://ftp.ncbi.nlm.nih.gov/pub/jats/publishing/1.2d2/) ||
+| [JATS 1.2)] (ftp://ftp.ncbi.nlm.nih.gov/pub/jats/publishing/1.2d2/) |   |
 
 
 ## Translated Features
