@@ -12,7 +12,7 @@ or build the XSLT into a CrossRef deposit process using JAXP or your favourite l
 
 An API has been added which accepts a JATS XML file via HTTP POST and returns the Crossref depositable XML. This service uses JATS2CrossRef_web.xsl. Values not present in the JATS XML may be added via URL parameters.
 
-http://doi.crossref.org//service/jatsconversion?email=&registrant=&DOI=&URL=
+http://doi.crossref.org/service/jatsconversion?email=&registrant=&DOI=&URL=
 
 A commandline XSLT processor can be used for diagnositc and experimental purposes:
 
