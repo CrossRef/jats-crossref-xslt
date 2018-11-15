@@ -10,6 +10,10 @@ to [CrossRef Deposit XML](http://help.crossref.org/deposit_schema).
 Either use CrossRef's [Web Deposit Form](http://www.crossref.org/webDeposit/) to deposit NISO NLM or JATS manually
 or build the XSLT into a CrossRef deposit process using JAXP or your favourite language's XML and XSLT processing library.
 
+An API has been added which accepts a JATS XML file via HTTP POST and returns the Crossref depositable XML.
+
+https://doi.crossref.org/service/jatsconversion
+
 A commandline XSLT processor can be used for diagnositc and experimental purposes:
 
 - http://xml.apache.org/xalan-j/commandline.html
@@ -24,6 +28,7 @@ Currently the following NLM and JATS [versions](http://jats.nlm.nih.gov/versions
 | [NLM 2.3](http://dtd.nlm.nih.gov/2.3/) |         |
 | [NLM 3.0](http://dtd.nlm.nih.gov/3.0/) |         |
 | [JATS 1.0](http://jats.nlm.nih.gov/1.0/) |         |
+| [JATS 1.2) (ftp://ftp.ncbi.nlm.nih.gov/pub/jats/publishing/1.2d2/) ||
 
 
 ## Translated Features
