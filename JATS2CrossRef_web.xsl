@@ -230,77 +230,19 @@
 <!-- ========================================================================== -->
 <!-- Publication Date                                                           -->
 <!-- ========================================================================== -->
-<xsl:template match="pub-date">
-	<xsl:if test="@pub-type='ppub' or @pub-type='pub'">
-		<publication_date media_type="print">
-			<xsl:if test="month">
-				<month>
-					<xsl:apply-templates select="month"/>
-				</month>
-			</xsl:if>
-			<xsl:if test="day">
-				<day>
-					<xsl:apply-templates select="day"/>
-				</day>
-			</xsl:if>
-			<year>
-				<xsl:apply-templates select="year"/>
-			</year>
+
+	<xsl:template match="pub-date">
+		<xsl:variable name="mediaType" select="if (@pub-type=('epub', 'epub-ppub')) then 'online' else 'print'"/>
+		<publication_date media_type="{ $mediaType }">
+			<xsl:apply-templates select="month"/>
+			<xsl:apply-templates select="day"/>
+			<xsl:apply-templates select="year"/>
 		</publication_date>
-	</xsl:if>
-	<xsl:if test="@pub-type='epub' or @pub-type='epub-ppub'">
-		<publication_date media_type="online">
-			<xsl:if test="month">
-				<month>
-					<xsl:apply-templates select="month"/>
-				</month>
-			</xsl:if>
-			<xsl:if test="day">
-				<day>
-					<xsl:apply-templates select="day"/>
-				</day>
-			</xsl:if>
-			<year>
-				<xsl:apply-templates select="year"/>
-			</year>
-		</publication_date>
-	</xsl:if>
-	<xsl:if test="not(@pub-type)">
-		<publication_date media_type="print">
-			<xsl:if test="month">
-				<month>
-					<xsl:apply-templates select="month"/>
-				</month>
-			</xsl:if>
-			<xsl:if test="day">
-				<day>
-					<xsl:apply-templates select="day"/>
-				</day>
-			</xsl:if>
-			<year>
-				<xsl:apply-templates select="year"/>
-			</year>
-		</publication_date>
-	</xsl:if>
-		<xsl:if
-			test="not(@pub-type = 'epub' or @pub-type = 'epub-ppub' or @pub-type = 'ppub' or @pub-type = 'pub')">
-		<publication_date media_type="print">
-			<xsl:if test="month">
-				<month>
-					<xsl:apply-templates select="month"/>
-				</month>
-			</xsl:if>
-			<xsl:if test="day">
-				<day>
-					<xsl:apply-templates select="day"/>
-				</day>
-			</xsl:if>
-			<year>
-				<xsl:apply-templates select="year"/>
-			</year>
-		</publication_date>
-	</xsl:if>
-</xsl:template>
+	</xsl:template>
+
+	<xsl:template match="month"><month><xsl:value-of select="."/></month></xsl:template>
+	<xsl:template match="day"><day><xsl:value-of select="."/></day></xsl:template>
+	<xsl:template match="year"><year><xsl:value-of select="."/></year></xsl:template>
 
 <!-- ========================================================================== -->
 <!-- Volume/Issue                                                               -->
