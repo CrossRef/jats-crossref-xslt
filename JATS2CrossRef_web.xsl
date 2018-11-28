@@ -31,9 +31,16 @@
             indent="yes" 
             encoding="UTF-8"/>
 
-<xsl:param name="meta" as="xs:string" required="yes"/>
-<!-- <xsl:variable name="metafile" select="parse-xml($meta)"/> -->  <!-- use this for command line testing/requires saxon 9.3 or greater -->
-<xsl:variable name="metafile" select="document($meta)"/>    <!-- use this for systemp processing/works with 8.5.1 curently in CS  -->
+	<!-- One of these two fields must be populated -->
+	<xsl:param name="metaContents" as="node()*" />
+	<xsl:param name="meta" as="xs:string" select="''"/>
+	<xsl:variable name="metafile">
+		<xsl:if test="empty($metaContents) and $meta=''">
+			<xsl:message terminate="yes">Must specify meta information - either as a nodeset in 'metaContents' or as a filename via 'meta'</xsl:message>
+		</xsl:if>
+		<xsl:sequence select="if (not(empty($metaContents))) then $metaContents else document($meta)"/>
+	</xsl:variable>
+
 <xsl:variable name="date" select="adjust-date-to-timezone(current-date(), ())"/>
 <xsl:variable name="time" select="format-time(current-time(),'[H01][m01][s01]')"/>
 <xsl:variable name="tempdatetime" select="concat($date,'',$time)"/>
