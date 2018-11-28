@@ -392,9 +392,9 @@
 		<contributors><xsl:apply-templates select="contrib"/></contributors>
 	</xsl:template>
 
-	<xsl:template match="contrib[name or name-alternatives]">
+	<xsl:template match="contrib[name or name-alternatives or string-name]">
 		<person_name sequence="{ if (position() eq 1) then 'first' else 'additional' }" contributor_role="{ @contrib-type }">
-			<xsl:apply-templates select="(name, name-alternatives/name, name-alternatives/string-name)[1]"/>
+			<xsl:apply-templates select="(name, string-name, name-alternatives/name, name-alternatives/string-name)[1]"/>
 
 			<xsl:if test="contrib-id[@contrib-id-type='orcid']">
 				<ORCID>
