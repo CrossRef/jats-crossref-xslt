@@ -47,36 +47,105 @@
 <!-- ========================================================================== -->
 <!-- Root Element                                                               -->
 <!-- ========================================================================== -->
-<xsl:template match="/">
-	<xsl:choose>
-		<xsl:when test="article">
-			<doi_batch version="4.3.6">
-					<xsl:attribute name="xsi:schemaLocation">http://www.crossref.org/schema/4.3.6
-						http://www.crossref.org/schema/deposit/crossref4.3.6.xsd</xsl:attribute>
-				<head>
-					<xsl:apply-templates select="//front"/>
 
-				</head>
-				<body>
-					<journal>
-						<xsl:apply-templates select="//journal-meta"/>
-						<xsl:if test="//pub-date|//article-meta/volume|//article-meta/issue">
-							<journal_issue>
-								<xsl:apply-templates select="//pub-date"/>
-								<xsl:apply-templates select="//article-meta/volume"/>
-								<xsl:apply-templates select="//article-meta/issue"/>
-							</journal_issue>
-						</xsl:if>
-						<xsl:apply-templates select="//article-meta/title-group"/>
-					</journal>
-				</body>
-			</doi_batch>
-		</xsl:when>
-		<xsl:otherwise>
-			<xsl:message terminate="yes"/>
-		</xsl:otherwise>
-	</xsl:choose>
-</xsl:template>
+	<xsl:template match="/">
+		<xsl:if test="not(article) and not(book)">
+			<xsl:message terminate="yes">Unrecognized content type - must be book or article</xsl:message>
+		</xsl:if>
+		<xsl:apply-templates />
+	</xsl:template>
+
+	<xsl:template match="article">
+		<doi_batch version="4.3.6" xsi:schemaLocation="http://www.crossref.org/schema/4.3.6 http://www.crossref.org/schema/deposit/crossref4.3.6.xsd">
+			<head>
+				<xsl:apply-templates select="//front"/>
+			</head>
+			<body>
+				<journal>
+					<xsl:apply-templates select="//journal-meta"/>
+					<xsl:if test="//pub-date|//article-meta/volume|//article-meta/issue">
+						<journal_issue>
+							<xsl:apply-templates select="//pub-date"/>
+							<xsl:apply-templates select="//article-meta/volume"/>
+							<xsl:apply-templates select="//article-meta/issue"/>
+						</journal_issue>
+					</xsl:if>
+					<xsl:apply-templates select="//article-meta/title-group"/>
+				</journal>
+			</body>
+		</doi_batch>
+	</xsl:template>
+
+	<!--
+		BITS support
+	-->
+
+	<xsl:template match="book">
+		<doi_batch version="4.3.6" xsi:schemaLocation="http://www.crossref.org/schema/4.3.6 http://www.crossref.org/schema/deposit/crossref4.3.6.xsd">
+			<head>
+				<xsl:apply-templates select="//front"/>
+			</head>
+			<body>
+				<book book_type="edited_book">
+					<book_series_metadata>
+
+					</book_series_metadata>
+					<content_item component_type="chapter">
+						<xsl:apply-templates select="body/book-part/book-part-meta"/>
+					</content_item>
+				</book>
+			</body>
+		</doi_batch>
+	</xsl:template>
+
+	<xsl:template match="body/book-part/book-part-meta">
+		<xsl:apply-templates select="contrib-group"/>
+		<xsl:apply-templates select="title-group"/>
+		<xsl:apply-templates select="pub-date"/>
+
+		<xsl:apply-templates select="body/book-part/book-part-meta/fpage"/>
+
+		<xsl:if test="fpage or lpage">
+			<pages><xsl:apply-templates select="fpage | lpage"/></pages>
+		</xsl:if>
+
+		<xsl:if test="book-part-id or elocation-id">
+			<publisher_item><xsl:apply-templates select="book-part-id | elocation-id"/></publisher_item>
+		</xsl:if>
+
+		<doi_data>
+			<doi><xsl:value-of select="($metafile/meta/doi, book-part-id[@pub-id-type='doi'])[1]"/></doi>
+			<resource><xsl:value-of select="($metafile/meta/resource, self-uri/@xlink:href)[1]"/></resource>
+			<xsl:call-template name="tdm"/>
+			<xsl:call-template name="crawler"/>
+		</doi_data>
+
+		<xsl:apply-templates select="//back/ref-list"/>
+	</xsl:template>
+
+	<xsl:template match="book-part-meta/contrib-group[contrib]">
+		<contributors><xsl:apply-templates select="contrib"/></contributors>
+	</xsl:template>
+
+	<xsl:template match="book-part-meta/title-group">
+		<titles><title><xsl:value-of select="normalize-space(.)"/></title></titles>
+	</xsl:template>
+
+	<xsl:template match="book-part-meta/fpage">
+		<first_page><xsl:value-of select="."/></first_page>
+	</xsl:template>
+
+	<xsl:template match="book-part-meta/lpage">
+		<last_page><xsl:value-of select="."/></last_page>
+	</xsl:template>
+
+	<xsl:template match="book-part-meta/book-part-id[@pub-id-type=('doi','pii','sici')]">
+		<identifier id_type="{@pub-id-type}"><xsl:value-of select="."/></identifier>
+	</xsl:template>
+
+	<xsl:template match="book-part-meta/elocation-id">
+		<item_number><xsl:value-of select="."/></item_number>
+	</xsl:template>
 
 <!-- ========================================================================== -->
 <!-- Front Matter Element                                                       -->
