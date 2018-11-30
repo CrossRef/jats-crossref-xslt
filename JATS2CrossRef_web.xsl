@@ -23,8 +23,9 @@
 				xmlns="http://www.crossref.org/schema/4.3.6"
 				xmlns:xsldoc="http://www.bacman.net/XSLdoc" 
 				xmlns:xlink="http://www.w3.org/1999/xlink" 
-                                xmlns:fr="http://www.crossref.org/fundref.xsd" 
-                                xmlns:ai="http://www.crossref.org/AccessIndicators.xsd" 
+				xmlns:fr="http://www.crossref.org/fundref.xsd"
+				xmlns:ai="http://www.crossref.org/AccessIndicators.xsd"
+				xmlns:jatsFn="http://www.crossref.org/functions/jats"
 				exclude-result-prefixes="xsldoc">
 
 <xsl:output method="xml" 
@@ -150,80 +151,42 @@
 <!-- ========================================================================== -->
 <!-- Front Matter Element                                                       -->
 <!-- ========================================================================== -->
-<xsl:template match="front">
-	<doi_batch_id>
-		<xsl:choose>
-			<xsl:when test="article-meta/article-id[@pub-id-type='art-access-id']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type = 'art-access-id']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='publisher-id']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type = 'publisher-id']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='doi']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='doi']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='medline']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='medline']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='pii']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='pii']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='sici']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='sici']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='pmid']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='pmid']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='other']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='other']"/>
-			</xsl:when>
-                        <xsl:when test="$metafile/meta/article_id">
-                                <xsl:apply-templates select="$metafile/meta/article_id"/>
-                        </xsl:when>
-			<xsl:otherwise>
-				<xsl:comment>No article-id has been entered by user</xsl:comment>
-			</xsl:otherwise>
-		</xsl:choose>
-	</doi_batch_id>
-	<timestamp>
-		<xsl:value-of select="$datetime"/>
-	</timestamp>
-	<depositor>
-		<depositor_name>
-			<xsl:choose>
-				<xsl:when test="//journal-meta/publisher">
-					<xsl:apply-templates select="//journal-meta/publisher/publisher-name"/>
-				</xsl:when>
-				<xsl:otherwise>
-					<xsl:comment>Publisher's Name not found in the input file</xsl:comment>
-				</xsl:otherwise>
-			</xsl:choose>
-		</depositor_name>
-  <email_address>
-			<xsl:choose>
-				<xsl:when test="$metafile/meta/email_address">
-					<xsl:apply-templates select="$metafile/meta/email_address"/>
-				</xsl:when>
-				<xsl:otherwise>
-					<xsl:comment>NO e-mail address has been entered by the user</xsl:comment>
-				</xsl:otherwise>
-			</xsl:choose>
+	<xsl:template match="front">
+		<xsl:variable name="noIdComment"><xsl:comment>No article-id has been entered by user</xsl:comment></xsl:variable>
+		<xsl:variable name="noPublisherNameComment"><xsl:comment>Publisher's Name not found in the input file</xsl:comment></xsl:variable>
+		<xsl:variable name="noEmailAddressComment"><xsl:comment>NO e-mail address has been entered by the user</xsl:comment></xsl:variable>
+
+		<doi_batch_id>
+			<xsl:sequence select="(jatsFn:findDoiBatchId(article-meta/article-id), $metafile/meta/article_id, $noIdComment)[1]" />
+		</doi_batch_id>
+		<timestamp>
+			<xsl:value-of select="$datetime"/>
+		</timestamp>
+		<depositor>
+			<depositor_name>
+				<xsl:sequence select="(//journal-meta/publisher/publisher-name/string(), $noPublisherNameComment)[1]"/>
+			</depositor_name>
+			<email_address>
+				<xsl:sequence select="($metafile/meta/email_address/string(), $noEmailAddressComment)[1]"/>
 			</email_address>
-	</depositor>
-	<registrant>
-		<xsl:choose>
-		<xsl:when test="$metafile/meta/depositor">
-				<xsl:apply-templates select="$metafile/meta/depositor"/>
-			</xsl:when>
-			<xsl:when test="//journal-meta/publisher">
-				<xsl:apply-templates select="//journal-meta/publisher/publisher-name"/>
-			</xsl:when>
-			<xsl:otherwise>
-				<xsl:comment>Publisher's name not found in the input file</xsl:comment>
-			</xsl:otherwise>
-		</xsl:choose>
-	</registrant>
-</xsl:template>
+		</depositor>
+		<registrant>
+			<xsl:sequence select="($metafile/meta/depositor/string(), //journal-meta/publisher/publisher-name/string(), $noPublisherNameComment)[1]"/>
+		</registrant>
+	</xsl:template>
+
+	<xsl:function name="jatsFn:findDoiBatchId" as="xs:string?">
+		<xsl:param name="candidateIdElements" as="element()*"/>
+		<xsl:variable name="candidateIds" select="($candidateIdElements[@pub-id-type='art-access-id']
+												  ,$candidateIdElements[@pub-id-type='publisher-id']
+												  ,$candidateIdElements[@pub-id-type='doi']
+												  ,$candidateIdElements[@pub-id-type='medline']
+												  ,$candidateIdElements[@pub-id-type='pii']
+												  ,$candidateIdElements[@pub-id-type='sici']
+												  ,$candidateIdElements[@pub-id-type='pmid']
+												  ,$candidateIdElements[@pub-id-type='other'])"/>
+		<xsl:sequence select="$candidateIds[1]"/>
+	</xsl:function>
 
 <!-- ========================================================================== -->
 <!-- Journal Metadata Element                                                   -->
