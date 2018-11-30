@@ -83,9 +83,7 @@
 
 	<xsl:template match="book">
 		<doi_batch version="4.3.6" xsi:schemaLocation="http://www.crossref.org/schema/4.3.6 http://www.crossref.org/schema/deposit/crossref4.3.6.xsd">
-			<head>
-				<xsl:apply-templates select="//front"/>
-			</head>
+			<xsl:sequence select="jatsFn:buildBookHead(.)"/>
 			<body>
 				<book book_type="edited_book">
 					<book_series_metadata>
@@ -98,6 +96,34 @@
 			</body>
 		</doi_batch>
 	</xsl:template>
+
+	<xsl:function name="jatsFn:buildBookHead" as="element()*">
+		<xsl:param name="current" as="element(book)"/>
+
+		<xsl:variable name="noIdComment"><xsl:comment>No batch id has been entered by user</xsl:comment></xsl:variable>
+		<xsl:variable name="noPublisherNameComment"><xsl:comment>Publisher's Name not found in the input file</xsl:comment></xsl:variable>
+		<xsl:variable name="noEmailAddressComment"><xsl:comment>NO e-mail address has been entered by the user</xsl:comment></xsl:variable>
+
+		<head>
+			<doi_batch_id>
+				<xsl:sequence select="($metafile/meta/article_id, jatsFn:findDoiBatchId($current/book-meta/book-id), $noIdComment)[1]" />
+			</doi_batch_id>
+			<timestamp>
+				<xsl:value-of select="$datetime"/>
+			</timestamp>
+			<depositor>
+				<depositor_name>
+					<xsl:sequence select="($current/book-meta/publisher/publisher-name/string(), $noPublisherNameComment)[1]"/>
+				</depositor_name>
+				<email_address>
+					<xsl:sequence select="($metafile/meta/email_address/string(), $noEmailAddressComment)[1]"/>
+				</email_address>
+			</depositor>
+			<registrant>
+				<xsl:sequence select="($metafile/meta/depositor/string(), $current/book-meta/publisher/publisher-name/string(), $noPublisherNameComment)[1]"/>
+			</registrant>
+		</head>
+	</xsl:function>
 
 	<xsl:template match="body/book-part/book-part-meta">
 		<xsl:apply-templates select="contrib-group"/>
@@ -157,7 +183,7 @@
 		<xsl:variable name="noEmailAddressComment"><xsl:comment>NO e-mail address has been entered by the user</xsl:comment></xsl:variable>
 
 		<doi_batch_id>
-			<xsl:sequence select="(jatsFn:findDoiBatchId(article-meta/article-id), $metafile/meta/article_id, $noIdComment)[1]" />
+			<xsl:sequence select="($metafile/meta/article_id, jatsFn:findDoiBatchId(article-meta/article-id), $noIdComment)[1]" />
 		</doi_batch_id>
 		<timestamp>
 			<xsl:value-of select="$datetime"/>
