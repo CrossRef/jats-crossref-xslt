@@ -88,7 +88,7 @@
 		<xsl:variable name="noEmailAddressComment"><xsl:comment>NO e-mail address has been entered by the user</xsl:comment></xsl:variable>
 
 		<doi_batch_id>
-			<xsl:sequence select="(jatsFn:findDoiBatchId(article-meta/article-id), $metafile/meta/article_id, $noIdComment)[1]" />
+			<xsl:sequence select="($metafile/meta/article_id, jatsFn:findDoiBatchId(article-meta/article-id), $noIdComment)[1]" />
 		</doi_batch_id>
 		<timestamp>
 			<xsl:value-of select="$datetime"/>
