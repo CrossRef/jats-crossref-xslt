@@ -3,7 +3,7 @@
 ## What is this?
 
 This repository contains an XSLT file that will translate [NISO NLM or JATS](http://jats.nlm.nih.gov/versions.html)
-to [CrossRef Deposit XML](http://help.crossref.org/deposit_schema). It is partially adapted from an XSLT file produced by [PEERJ] (https://github.com/PeerJ/crossref-validate). The XSLT file is a prototype and is still under review, but we welcome comments. 
+to [CrossRef Deposit XML](http://help.crossref.org/deposit_schema). It is partially adapted from an XSLT file produced by [PEERJ](https://github.com/PeerJ/crossref-validate). The XSLT file is a prototype and is still under review, but we welcome comments. 
 
 ## How do I use this?
 
