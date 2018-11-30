@@ -3,12 +3,11 @@
 ## What is this?
 
 This repository contains an XSLT file that will translate [NISO NLM or JATS](http://jats.nlm.nih.gov/versions.html)
-to [CrossRef Deposit XML](http://help.crossref.org/deposit_schema).
+to [CrossRef Deposit XML](http://help.crossref.org/deposit_schema). It is partially adapted from an XSLT file produced by [PEERJ] (https://github.com/PeerJ/crossref-validate). The XSLT file is a prototype and is still under review, but we welcome comments. 
 
 ## How do I use this?
 
-Either use CrossRef's [Web Deposit Form](http://www.crossref.org/webDeposit/) to deposit NISO NLM or JATS manually
-or build the XSLT into a CrossRef deposit process using JAXP or your favourite language's XML and XSLT processing library.
+Build the XSLT into a CrossRef deposit process using JAXP or your favourite language's XML and XSLT processing library.
 
 An API has been added which accepts a JATS XML file via HTTP POST and returns the Crossref depositable XML. This service uses JATS2CrossRef_web.xsl. Values not present in the JATS XML may be added via URL parameters.
 
@@ -41,4 +40,3 @@ Currently the following NLM and JATS [versions](http://jats.nlm.nih.gov/versions
 
 ## Contributing
 
-CrossRef welcomes contributions to enhance this XSLT. Please make a pull request to contribute.
