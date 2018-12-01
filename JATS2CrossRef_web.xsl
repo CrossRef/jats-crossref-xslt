@@ -159,52 +159,28 @@
 <!-- ========================================================================== -->
 <!-- Journal Metadata Element                                                   -->
 <!-- ========================================================================== -->
-<xsl:template match="journal-meta">
-	<journal_metadata language="en">
-		<xsl:choose>
-			<xsl:when test="journal-title-group/journal-title">
-				<full_title>
-					<xsl:value-of select="journal-title-group/journal-title"/>
-				</full_title>
-			</xsl:when>
-			<xsl:when test="journal-title">
-				<full_title>
-					<xsl:value-of select="journal-title"/>
-				</full_title>
-			</xsl:when>
-			<xsl:when test="journal-id">
-				<full_title>
-					<xsl:value-of select="journal-id"/>
-				</full_title>
-				</xsl:when>
-			<xsl:otherwise>
-				<full_title>
-					<xsl:message terminate="yes">Journal full title is not available in the Input file</xsl:message>
-				</full_title>
-			</xsl:otherwise>
-		</xsl:choose>
-		<xsl:choose>
-			<xsl:when test="abbrev-journal-title">
-				<abbrev_title>
-					<xsl:value-of select="abbrev-journal-title"/>
-				</abbrev_title>
-			</xsl:when>
-		</xsl:choose>
-		<xsl:choose>
-			<xsl:when test="issn">
-				<xsl:apply-templates select="issn"/>
-			</xsl:when>
-			<xsl:otherwise>
-                            <xsl:message terminate="yes">ISSN is not available in the Input file</xsl:message>
-			</xsl:otherwise>
-		</xsl:choose>
-		<xsl:if test="../article-meta/article-id[@pub-id-type='coden']">
-			<coden>
-				<xsl:value-of select="../article-meta/article-id[@pub-id-type='coden']"/>
-			</coden>
-		</xsl:if>
-	</journal_metadata>
-</xsl:template>
+	<xsl:template match="journal-meta">
+		<journal_metadata language="en">
+			<xsl:variable name="fullTitle" as="xs:string?" select="(journal-title-group/journal-title, journal-title, journal-id)[1]" />
+			<xsl:if test="not($fullTitle)"><xsl:message terminate="yes">Journal full title is not available in the Input file</xsl:message></xsl:if>
+			<full_title><xsl:value-of select="$fullTitle"/></full_title>
+
+			<xsl:apply-templates select="(journal-title-group/abbrev-journal-title | abbrev-journal-title)[1]"/>
+
+			<xsl:if test="not(issn)"><xsl:message terminate="yes">ISSN is not available in the Input file</xsl:message></xsl:if>
+			<xsl:apply-templates select="issn"/>
+
+			<xsl:if test="../article-meta/article-id[@pub-id-type='coden']">
+				<coden>
+					<xsl:value-of select="../article-meta/article-id[@pub-id-type='coden']"/>
+				</coden>
+			</xsl:if>
+		</journal_metadata>
+	</xsl:template>
+
+	<xsl:template match="abbrev-journal-title">
+		<abbrev_title><xsl:value-of select="."/></abbrev_title>
+	</xsl:template>
 
 <!-- ========================================================================== -->
 <!-- ISSN                                                                       -->
