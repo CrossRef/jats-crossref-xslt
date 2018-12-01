@@ -23,8 +23,9 @@
 				xmlns="http://www.crossref.org/schema/4.3.6"
 				xmlns:xsldoc="http://www.bacman.net/XSLdoc" 
 				xmlns:xlink="http://www.w3.org/1999/xlink" 
-                                xmlns:fr="http://www.crossref.org/fundref.xsd" 
-                                xmlns:ai="http://www.crossref.org/AccessIndicators.xsd" 
+                xmlns:fr="http://www.crossref.org/fundref.xsd"
+                xmlns:ai="http://www.crossref.org/AccessIndicators.xsd"
+				xmlns:jatsFn="http://www.crossref.org/functions/jats"
 				exclude-result-prefixes="xsldoc">
 
 <xsl:output method="xml" 
@@ -38,11 +39,6 @@
 <xsl:variable name="time" select="format-time(current-time(),'[H01][m01][s01]')"/>
 <xsl:variable name="tempdatetime" select="concat($date,'',$time)"/>
 <xsl:variable name="datetime" select="translate($tempdatetime,':-.','')"/>
-
-<xsl:variable name="article-meta" select="/article/front/article-meta"/>
-<xsl:variable name="article-id" select="$article-meta/article-id[@pub-id-type = 'publisher-id']"/>
-<xsl:variable name="doi" select="$article-meta/article-id[@pub-id-type = 'doi']"/>
-<xsl:variable name="url" select="$article-meta/self-uri/@xlink:href"/>
 
 <!-- ========================================================================== -->
 <!-- Root Element                                                               -->
@@ -365,21 +361,10 @@
 				</xsl:choose>
 			</doi>
 
-			<resource>
-				<xsl:choose>
-					<xsl:when test="$metafile/meta/resource">
-						<xsl:apply-templates select="$metafile/meta/resource"/>
-					</xsl:when>
-					<xsl:when test="//article-meta/self-uri/@xlink:href">
-						<xsl:apply-templates select="//article-meta/self-uri/@xlink:href"/>
-					</xsl:when>
-					<xsl:otherwise>
-						<xsl:comment>No Resource entry has been entered by the user</xsl:comment>
-					</xsl:otherwise>
-				</xsl:choose>
-			</resource>
-           		<xsl:call-template name="tdm"/>
-           		<xsl:call-template name="crawler"/>
+			<xsl:variable name="resource" select="($metafile/meta/resource, //article-meta/self-uri/@xlink:href)[1]"/>
+			<resource><xsl:value-of select="$resource"/></resource>
+			<xsl:sequence select="jatsFn:tdm($resource)"/>
+			<xsl:sequence select="jatsFn:crawler($resource)"/>
 		</doi_data>
 		<xsl:apply-templates select="//back/ref-list"/>
 	</journal_article>
@@ -796,65 +781,42 @@
 
 	<!-- full-text URLs -->
 	<!-- http://tdmsupport.crossref.org/full-text-uris-technical-details/ -->
-	<xsl:template name="tdm">
-		<collection property="text-mining">
-			<item>
-				<resource content_version="vor" mime_type="application/pdf">
-					<xsl:choose>
-						<xsl:when test="ends-with($url,'/')">
-							<xsl:value-of select="concat(substring($url,1,string-length($url)-1), '.pdf')"/>
-						</xsl:when>
-						<xsl:otherwise>
-							<xsl:value-of select="concat($url, '.pdf')"/>
-						</xsl:otherwise>
-					</xsl:choose>
-				</resource>
-			</item>
-			<item>
-				<resource content_version="vor" mime_type="application/xml">
-					<xsl:choose>
-						<xsl:when test="ends-with($url,'/')">
-							<xsl:value-of select="concat(substring($url,1,string-length($url)-1), '.xml')"/>
-						</xsl:when>
-						<xsl:otherwise>
-							<xsl:value-of select="concat($url, '.xml')"/>
-						</xsl:otherwise>
-					</xsl:choose>
-				</resource>
-			</item>
-			<item>
-				<resource content_version="vor" mime_type="text/html">
-					<xsl:choose>
-						<xsl:when test="ends-with($url,'/')">
-							<xsl:value-of select="concat(substring($url,1,string-length($url)-1), '.html')"/>
-						</xsl:when>
-						<xsl:otherwise>
-							<xsl:value-of select="concat($url, '.html')"/>
-						</xsl:otherwise>
-					</xsl:choose>
-				</resource>
-			</item>
-		</collection>
-	</xsl:template>
+	<xsl:function name="jatsFn:tdm">
+		<xsl:param name="resource"/>
+		<xsl:variable name="base" as="xs:string"
+					  select="if (ends-with($resource,'/')) then substring($resource,1,string-length($resource)-1) else $resource"/>
+		<xsl:variable name="defaultFormats">pdf,xml,html</xsl:variable>
+		<xsl:variable name="formatsFromMeta" select="$metafile/meta/tdmFormats" as="xs:string?"/>
+		<xsl:variable name="formats" select="tokenize(($formatsFromMeta,$defaultFormats)[1],',')"/>
 
-<!-- crawler full-text URLs for Similarity Check -->
+		<xsl:if test="not(empty($formats))">
+			<collection property="text-mining">
+				<xsl:for-each select="$formats">
+					<item>
+						<resource content_version="vor" mime_type="application/{ . }">
+							<xsl:value-of select="concat($base, '.', . )"/>
+						</resource>
+					</item>
+				</xsl:for-each>
+			</collection>
+		</xsl:if>
+	</xsl:function>
+
+	<!-- crawler full-text URLs for Similarity Check -->
 	<!-- https://support.crossref.org/hc/en-us/articles/215774943-Depositing-as-crawled-URLs-for-Similarity-Check -->
-	<xsl:template name="crawler">
+	<xsl:function name="jatsFn:crawler">
+		<xsl:param name="resource"/>
+		<xsl:variable name="base" as="xs:string"
+					  select="if (ends-with($resource,'/')) then substring($resource,1,string-length($resource)-1) else $resource"/>
+
 		<collection property="crawler-based">
 			<item crawler="iParadigms">
 				<resource>
-					<xsl:choose>
-						<xsl:when test="ends-with($url,'/')">
-							<xsl:value-of select="concat(substring($url,1,string-length($url)-1), '.pdf')"/>
-						</xsl:when>
-						<xsl:otherwise>
-							<xsl:value-of select="concat($url, '.pdf')"/>
-						</xsl:otherwise>
-					</xsl:choose>
+					<xsl:value-of select="concat($base, '.html' )"/>
 				</resource>
 			</item>
 		</collection>
-	</xsl:template>
+	</xsl:function>
 
 	<!-- archive locations -->
 <!--	<xsl:template name="archive-locations">
