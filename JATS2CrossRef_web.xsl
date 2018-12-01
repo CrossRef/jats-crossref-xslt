@@ -81,15 +81,43 @@
 			<xsl:sequence select="jatsFn:buildBookHead(.)"/>
 			<body>
 				<book book_type="edited_book">
-					<book_series_metadata>
-
-					</book_series_metadata>
+					<book_metadata>
+						<xsl:apply-templates select="book-meta"/>
+					</book_metadata>
 					<content_item component_type="chapter">
 						<xsl:apply-templates select="body/book-part/book-part-meta"/>
 					</content_item>
 				</book>
 			</body>
 		</doi_batch>
+	</xsl:template>
+
+	<xsl:template match="book-meta">
+		<xsl:apply-templates select="contrib-group"/>
+		<xsl:apply-templates select="book-title-group"/>
+		<xsl:apply-templates select="volume"/>
+		<xsl:apply-templates select="pub-date"/>
+		<xsl:apply-templates select="isbn"/>
+		<xsl:apply-templates select="publisher"/>
+		<xsl:if test="book-id">
+			<publisher_item><xsl:apply-templates select="book-id"/></publisher_item>
+		</xsl:if>
+		<doi_data>
+			<xsl:variable name="resource" select="($metafile/meta/bookResource, self-uri/@xlink:href)[1]"/>
+			<doi><xsl:value-of select="($metafile/meta/bookDoi, book-id[@pub-id-type='doi'])[1]"/></doi>
+			<resource><xsl:value-of select="$resource"/></resource>
+		</doi_data>
+	</xsl:template>
+
+	<xsl:template match="volume"><volume><xsl:value-of select="."/></volume></xsl:template>
+
+	<xsl:template match="isbn">
+		<xsl:variable name="mediaType" select="if (@pub-type=('epub', 'epub-ppub')) then 'electronic' else 'print'"/>
+		<isbn media_type="{$mediaType}"><xsl:value-of select="."/></isbn>
+	</xsl:template>
+
+	<xsl:template match="book-meta/publisher">
+		<publisher><publisher-name><xsl:value-of select="publisher-name"/></publisher-name></publisher>
 	</xsl:template>
 
 	<xsl:function name="jatsFn:buildBookHead" as="element()*">
@@ -148,11 +176,11 @@
 		<xsl:apply-templates select="//back/ref-list"/>
 	</xsl:template>
 
-	<xsl:template match="book-part-meta/contrib-group[contrib]">
+	<xsl:template match="book-meta/contrib-group[contrib] | book-part-meta/contrib-group[contrib]">
 		<contributors><xsl:apply-templates select="contrib"/></contributors>
 	</xsl:template>
 
-	<xsl:template match="book-part-meta/title-group">
+	<xsl:template match="book-meta/book-title-group | book-part-meta/title-group">
 		<titles><title><xsl:value-of select="normalize-space(.)"/></title></titles>
 	</xsl:template>
 
@@ -164,7 +192,7 @@
 		<last_page><xsl:value-of select="."/></last_page>
 	</xsl:template>
 
-	<xsl:template match="book-part-meta/book-part-id[@pub-id-type=('doi','pii','sici')]">
+	<xsl:template match="book-meta/book-id[@pub-id-type=('doi','pii','sici')] | book-part-meta/book-part-id[@pub-id-type=('doi','pii','sici')]">
 		<identifier id_type="{@pub-id-type}"><xsl:value-of select="."/></identifier>
 	</xsl:template>
 
