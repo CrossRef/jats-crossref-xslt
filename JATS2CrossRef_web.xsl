@@ -138,11 +138,12 @@
         <xsl:sequence select="jatsFn:accessIndicator(permissions)"/>
 
         <doi_data>
-			<doi><xsl:value-of select="($metafile/meta/doi, book-part-id[@pub-id-type='doi'])[1]"/></doi>
-			<resource><xsl:value-of select="($metafile/meta/resource, self-uri/@xlink:href)[1]"/></resource>
-			<xsl:call-template name="tdm"/>
-			<xsl:call-template name="crawler"/>
-		</doi_data>
+            <xsl:variable name="resource" select="($metafile/meta/resource, self-uri/@xlink:href)[1]"/>
+            <doi><xsl:value-of select="($metafile/meta/doi, book-part-id[@pub-id-type='doi'])[1]"/></doi>
+            <resource><xsl:value-of select="$resource"/></resource>
+            <xsl:sequence select="jatsFn:tdm($resource)"/>
+            <xsl:sequence select="jatsFn:crawler($resource)"/>
+        </doi_data>
 
 		<xsl:apply-templates select="//back/ref-list"/>
 	</xsl:template>
