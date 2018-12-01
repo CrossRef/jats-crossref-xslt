@@ -140,7 +140,9 @@
 			<publisher_item><xsl:apply-templates select="book-part-id | elocation-id"/></publisher_item>
 		</xsl:if>
 
-		<doi_data>
+        <xsl:sequence select="jatsFn:accessIndicator(permissions)"/>
+
+        <doi_data>
 			<doi><xsl:value-of select="($metafile/meta/doi, book-part-id[@pub-id-type='doi'])[1]"/></doi>
 			<resource><xsl:value-of select="($metafile/meta/resource, self-uri/@xlink:href)[1]"/></resource>
 			<xsl:call-template name="tdm"/>
