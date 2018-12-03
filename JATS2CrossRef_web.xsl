@@ -23,8 +23,9 @@
 				xmlns="http://www.crossref.org/schema/4.3.6"
 				xmlns:xsldoc="http://www.bacman.net/XSLdoc" 
 				xmlns:xlink="http://www.w3.org/1999/xlink" 
-                                xmlns:fr="http://www.crossref.org/fundref.xsd" 
-                                xmlns:ai="http://www.crossref.org/AccessIndicators.xsd" 
+				xmlns:fr="http://www.crossref.org/fundref.xsd"
+				xmlns:ai="http://www.crossref.org/AccessIndicators.xsd"
+				xmlns:jatsFn="http://www.crossref.org/functions/jats"
 				exclude-result-prefixes="xsldoc">
 
 <xsl:output method="xml" 
@@ -39,122 +40,205 @@
 <xsl:variable name="tempdatetime" select="concat($date,'',$time)"/>
 <xsl:variable name="datetime" select="translate($tempdatetime,':-.','')"/>
 
-<xsl:variable name="article-meta" select="/article/front/article-meta"/>
-<xsl:variable name="article-id" select="$article-meta/article-id[@pub-id-type = 'publisher-id']"/>
-<xsl:variable name="doi" select="$article-meta/article-id[@pub-id-type = 'doi']"/>
-<xsl:variable name="url" select="$article-meta/self-uri/@xlink:href"/>
-
 <!-- ========================================================================== -->
 <!-- Root Element                                                               -->
 <!-- ========================================================================== -->
-<xsl:template match="/">
-	<xsl:choose>
-		<xsl:when test="article">
-			<doi_batch version="4.3.6">
-					<xsl:attribute name="xsi:schemaLocation">http://www.crossref.org/schema/4.3.6
-						http://www.crossref.org/schema/deposit/crossref4.3.6.xsd</xsl:attribute>
-				<head>
-					<xsl:apply-templates select="//front"/>
 
-				</head>
-				<body>
-					<journal>
-						<xsl:apply-templates select="//journal-meta"/>
-						<xsl:if test="//pub-date|//article-meta/volume|//article-meta/issue">
-							<journal_issue>
-								<xsl:apply-templates select="//pub-date"/>
-								<xsl:apply-templates select="//article-meta/volume"/>
-								<xsl:apply-templates select="//article-meta/issue"/>
-							</journal_issue>
-						</xsl:if>
-						<xsl:apply-templates select="//article-meta/title-group"/>
-					</journal>
-				</body>
-			</doi_batch>
-		</xsl:when>
-		<xsl:otherwise>
-			<xsl:message terminate="yes"/>
-		</xsl:otherwise>
-	</xsl:choose>
-</xsl:template>
+	<xsl:template match="/">
+		<xsl:if test="not(article) and not(book)">
+			<xsl:message terminate="yes">Unrecognized content type - must be book or article</xsl:message>
+		</xsl:if>
+		<xsl:apply-templates />
+	</xsl:template>
+
+	<xsl:template match="article">
+		<doi_batch version="4.3.6" xsi:schemaLocation="http://www.crossref.org/schema/4.3.6 http://www.crossref.org/schema/deposit/crossref4.3.6.xsd">
+			<head>
+				<xsl:apply-templates select="//front"/>
+			</head>
+			<body>
+				<journal>
+					<xsl:apply-templates select="//journal-meta"/>
+					<xsl:if test="//pub-date|//article-meta/volume|//article-meta/issue">
+						<journal_issue>
+							<xsl:apply-templates select="//pub-date"/>
+							<xsl:apply-templates select="//article-meta/volume"/>
+							<xsl:apply-templates select="//article-meta/issue"/>
+						</journal_issue>
+					</xsl:if>
+					<xsl:apply-templates select="//article-meta/title-group"/>
+				</journal>
+			</body>
+		</doi_batch>
+	</xsl:template>
+
+	<!--
+		BITS support
+	-->
+
+	<xsl:template match="book">
+		<doi_batch version="4.3.6" xsi:schemaLocation="http://www.crossref.org/schema/4.3.6 http://www.crossref.org/schema/deposit/crossref4.3.6.xsd">
+			<xsl:sequence select="jatsFn:buildBookHead(.)"/>
+			<body>
+				<book book_type="edited_book">
+					<book_metadata>
+						<xsl:apply-templates select="book-meta"/>
+					</book_metadata>
+					<content_item component_type="chapter">
+						<xsl:apply-templates select="body/book-part/book-part-meta"/>
+					</content_item>
+				</book>
+			</body>
+		</doi_batch>
+	</xsl:template>
+
+	<xsl:template match="book-meta">
+		<xsl:apply-templates select="contrib-group"/>
+		<xsl:apply-templates select="book-title-group"/>
+		<xsl:apply-templates select="volume"/>
+		<xsl:apply-templates select="pub-date"/>
+		<xsl:apply-templates select="isbn"/>
+		<xsl:apply-templates select="publisher"/>
+		<xsl:if test="book-id">
+			<publisher_item><xsl:apply-templates select="book-id"/></publisher_item>
+		</xsl:if>
+		<doi_data>
+			<xsl:variable name="resource" select="($metafile/meta/bookResource, self-uri/@xlink:href)[1]"/>
+			<doi><xsl:value-of select="($metafile/meta/bookDoi, book-id[@pub-id-type='doi'])[1]"/></doi>
+			<resource><xsl:value-of select="$resource"/></resource>
+		</doi_data>
+	</xsl:template>
+
+	<xsl:template match="volume"><volume><xsl:value-of select="."/></volume></xsl:template>
+
+	<xsl:template match="isbn">
+		<xsl:variable name="mediaType" select="if (@pub-type=('epub', 'epub-ppub')) then 'electronic' else 'print'"/>
+		<isbn media_type="{$mediaType}"><xsl:value-of select="."/></isbn>
+	</xsl:template>
+
+	<xsl:template match="book-meta/publisher">
+		<publisher><publisher-name><xsl:value-of select="publisher-name"/></publisher-name></publisher>
+	</xsl:template>
+
+	<xsl:function name="jatsFn:buildBookHead" as="element()*">
+		<xsl:param name="current" as="element(book)"/>
+
+		<xsl:variable name="noIdComment"><xsl:comment>No batch id has been entered by user</xsl:comment></xsl:variable>
+		<xsl:variable name="noPublisherNameComment"><xsl:comment>Publisher's Name not found in the input file</xsl:comment></xsl:variable>
+		<xsl:variable name="noEmailAddressComment"><xsl:comment>NO e-mail address has been entered by the user</xsl:comment></xsl:variable>
+
+		<head>
+			<doi_batch_id>
+				<xsl:sequence select="($metafile/meta/article_id, jatsFn:findDoiBatchId($current/book-meta/book-id), $noIdComment)[1]" />
+			</doi_batch_id>
+			<timestamp>
+				<xsl:value-of select="$datetime"/>
+			</timestamp>
+			<depositor>
+				<depositor_name>
+					<xsl:sequence select="($current/book-meta/publisher/publisher-name/string(), $noPublisherNameComment)[1]"/>
+				</depositor_name>
+				<email_address>
+					<xsl:sequence select="($metafile/meta/email_address/string(), $noEmailAddressComment)[1]"/>
+				</email_address>
+			</depositor>
+			<registrant>
+				<xsl:sequence select="($metafile/meta/depositor/string(), $current/book-meta/publisher/publisher-name/string(), $noPublisherNameComment)[1]"/>
+			</registrant>
+		</head>
+	</xsl:function>
+
+	<xsl:template match="body/book-part/book-part-meta">
+		<xsl:apply-templates select="contrib-group"/>
+		<xsl:apply-templates select="title-group"/>
+		<xsl:apply-templates select="pub-date"/>
+
+		<xsl:apply-templates select="body/book-part/book-part-meta/fpage"/>
+
+		<xsl:if test="fpage or lpage">
+			<pages><xsl:apply-templates select="fpage | lpage"/></pages>
+		</xsl:if>
+
+		<xsl:if test="book-part-id or elocation-id">
+			<publisher_item><xsl:apply-templates select="book-part-id | elocation-id"/></publisher_item>
+		</xsl:if>
+
+        <xsl:sequence select="jatsFn:accessIndicator(permissions)"/>
+
+        <doi_data>
+            <xsl:variable name="resource" select="($metafile/meta/resource, self-uri/@xlink:href)[1]"/>
+            <doi><xsl:value-of select="($metafile/meta/doi, book-part-id[@pub-id-type='doi'])[1]"/></doi>
+            <resource><xsl:value-of select="$resource"/></resource>
+            <xsl:sequence select="jatsFn:tdm($resource)"/>
+            <xsl:sequence select="jatsFn:crawler($resource)"/>
+        </doi_data>
+
+		<xsl:apply-templates select="//back/ref-list"/>
+	</xsl:template>
+
+	<xsl:template match="book-meta/contrib-group[contrib] | book-part-meta/contrib-group[contrib]">
+		<contributors><xsl:apply-templates select="contrib"/></contributors>
+	</xsl:template>
+
+	<xsl:template match="book-meta/book-title-group | book-part-meta/title-group">
+		<titles><title><xsl:value-of select="normalize-space(.)"/></title></titles>
+	</xsl:template>
+
+	<xsl:template match="book-part-meta/fpage">
+		<first_page><xsl:value-of select="."/></first_page>
+	</xsl:template>
+
+	<xsl:template match="book-part-meta/lpage">
+		<last_page><xsl:value-of select="."/></last_page>
+	</xsl:template>
+
+	<xsl:template match="book-meta/book-id[@pub-id-type=('doi','pii','sici')] | book-part-meta/book-part-id[@pub-id-type=('doi','pii','sici')]">
+		<identifier id_type="{@pub-id-type}"><xsl:value-of select="."/></identifier>
+	</xsl:template>
+
+	<xsl:template match="book-part-meta/elocation-id">
+		<item_number><xsl:value-of select="."/></item_number>
+	</xsl:template>
 
 <!-- ========================================================================== -->
 <!-- Front Matter Element                                                       -->
 <!-- ========================================================================== -->
-<xsl:template match="front">
-	<doi_batch_id>
-		<xsl:choose>
-			<xsl:when test="article-meta/article-id[@pub-id-type='art-access-id']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type = 'art-access-id']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='publisher-id']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type = 'publisher-id']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='doi']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='doi']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='medline']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='medline']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='pii']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='pii']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='sici']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='sici']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='pmid']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='pmid']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='other']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='other']"/>
-			</xsl:when>
-                        <xsl:when test="$metafile/meta/article_id">
-                                <xsl:apply-templates select="$metafile/meta/article_id"/>
-                        </xsl:when>
-			<xsl:otherwise>
-				<xsl:comment>No article-id has been entered by user</xsl:comment>
-			</xsl:otherwise>
-		</xsl:choose>
-	</doi_batch_id>
-	<timestamp>
-		<xsl:value-of select="$datetime"/>
-	</timestamp>
-	<depositor>
-		<depositor_name>
-			<xsl:choose>
-				<xsl:when test="//journal-meta/publisher">
-					<xsl:apply-templates select="//journal-meta/publisher/publisher-name"/>
-				</xsl:when>
-				<xsl:otherwise>
-					<xsl:comment>Publisher's Name not found in the input file</xsl:comment>
-				</xsl:otherwise>
-			</xsl:choose>
-		</depositor_name>
-  <email_address>
-			<xsl:choose>
-				<xsl:when test="$metafile/meta/email_address">
-					<xsl:apply-templates select="$metafile/meta/email_address"/>
-				</xsl:when>
-				<xsl:otherwise>
-					<xsl:comment>NO e-mail address has been entered by the user</xsl:comment>
-				</xsl:otherwise>
-			</xsl:choose>
+	<xsl:template match="front">
+		<xsl:variable name="noIdComment"><xsl:comment>No article-id has been entered by user</xsl:comment></xsl:variable>
+		<xsl:variable name="noPublisherNameComment"><xsl:comment>Publisher's Name not found in the input file</xsl:comment></xsl:variable>
+		<xsl:variable name="noEmailAddressComment"><xsl:comment>NO e-mail address has been entered by the user</xsl:comment></xsl:variable>
+
+		<doi_batch_id>
+			<xsl:sequence select="($metafile/meta/article_id, jatsFn:findDoiBatchId(article-meta/article-id), $noIdComment)[1]" />
+		</doi_batch_id>
+		<timestamp>
+			<xsl:value-of select="$datetime"/>
+		</timestamp>
+		<depositor>
+			<depositor_name>
+				<xsl:sequence select="(//journal-meta/publisher/publisher-name/string(), $noPublisherNameComment)[1]"/>
+			</depositor_name>
+			<email_address>
+				<xsl:sequence select="($metafile/meta/email_address/string(), $noEmailAddressComment)[1]"/>
 			</email_address>
-	</depositor>
-	<registrant>
-		<xsl:choose>
-		<xsl:when test="$metafile/meta/depositor">
-				<xsl:apply-templates select="$metafile/meta/depositor"/>
-			</xsl:when>
-			<xsl:when test="//journal-meta/publisher">
-				<xsl:apply-templates select="//journal-meta/publisher/publisher-name"/>
-			</xsl:when>
-			<xsl:otherwise>
-				<xsl:comment>Publisher's name not found in the input file</xsl:comment>
-			</xsl:otherwise>
-		</xsl:choose>
-	</registrant>
-</xsl:template>
+		</depositor>
+		<registrant>
+			<xsl:sequence select="($metafile/meta/depositor/string(), //journal-meta/publisher/publisher-name/string(), $noPublisherNameComment)[1]"/>
+		</registrant>
+	</xsl:template>
+
+	<xsl:function name="jatsFn:findDoiBatchId" as="xs:string?">
+		<xsl:param name="candidateIdElements" as="element()*"/>
+		<xsl:variable name="candidateIds" select="($candidateIdElements[@pub-id-type='art-access-id']
+												  ,$candidateIdElements[@pub-id-type='publisher-id']
+												  ,$candidateIdElements[@pub-id-type='doi']
+												  ,$candidateIdElements[@pub-id-type='medline']
+												  ,$candidateIdElements[@pub-id-type='pii']
+												  ,$candidateIdElements[@pub-id-type='sici']
+												  ,$candidateIdElements[@pub-id-type='pmid']
+												  ,$candidateIdElements[@pub-id-type='other'])"/>
+		<xsl:sequence select="$candidateIds[1]"/>
+	</xsl:function>
 
 <!-- ========================================================================== -->
 <!-- Journal Metadata Element                                                   -->
@@ -345,8 +429,8 @@
 			<xsl:apply-templates select="//article-meta/funding-group[@specific-use = 'Crossref']" mode="fundref"/>
 
 			<!-- license-ref AccessIndicators -->
-			<xsl:apply-templates select="//permissions/license/@xlink:href" mode="access-indicators"/>
-			
+			<xsl:sequence select="jatsFn:accessIndicator((//permissions)[1])"/>
+
 			<!-- archive locations -->
 			<!-- <xsl:call-template name="archive-locations"/> -->
 			
@@ -365,21 +449,10 @@
 				</xsl:choose>
 			</doi>
 
-			<resource>
-				<xsl:choose>
-					<xsl:when test="$metafile/meta/resource">
-						<xsl:apply-templates select="$metafile/meta/resource"/>
-					</xsl:when>
-					<xsl:when test="//article-meta/self-uri/@xlink:href">
-						<xsl:apply-templates select="//article-meta/self-uri/@xlink:href"/>
-					</xsl:when>
-					<xsl:otherwise>
-						<xsl:comment>No Resource entry has been entered by the user</xsl:comment>
-					</xsl:otherwise>
-				</xsl:choose>
-			</resource>
-           		<xsl:call-template name="tdm"/>
-           		<xsl:call-template name="crawler"/>
+			<xsl:variable name="resource" select="($metafile/meta/resource, //article-meta/self-uri/@xlink:href)[1]"/>
+			<resource><xsl:value-of select="$resource"/></resource>
+			<xsl:sequence select="jatsFn:tdm($resource)"/>
+			<xsl:sequence select="jatsFn:crawler($resource)"/>
 		</doi_data>
 		<xsl:apply-templates select="//back/ref-list"/>
 	</journal_article>
@@ -719,14 +792,32 @@
 	</xsl:template>
 
 	<!-- license URL -->
-	<!-- http://tdmsupport.crossref.org/license-uris-technical-details/ -->
-	<xsl:template match="permissions/license/@xlink:href" mode="access-indicators">
-		<ai:program name="AccessIndicators">
-			<ai:license_ref>
-				<xsl:value-of select="."/>
-			</ai:license_ref>
-		</ai:program>
+	<xsl:function name="jatsFn:accessIndicator" as="element(ai:program)?">
+		<xsl:param name="permissions" as="element()?"/>
+
+		<xsl:variable name="indicators" as="element()*">
+			<xsl:if test="$permissions/license[@license-type=('open-access', 'free')]"><free_to_read/></xsl:if>
+			<xsl:apply-templates select="$permissions/license" mode="access-indicators"/>
+			<xsl:apply-templates select="$metafile/meta/license" mode="fromMeta"/>
+		</xsl:variable>
+
+		<xsl:if test="not(empty($indicators))">
+			<ai:program name="AccessIndicators"><xsl:sequence select="$indicators"/></ai:program>
+		</xsl:if>
+	</xsl:function>
+
+	<xsl:template match="license" mode="fromMeta">
+		<ai:license_ref>
+			<xsl:if test="@applies_to"><xsl:attribute name="applies_to" select="@applies_to"/></xsl:if>
+			<xsl:value-of select="."/>
+		</ai:license_ref>
 	</xsl:template>
+
+	<!-- http://tdmsupport.crossref.org/license-uris-technical-details/ -->
+	<xsl:template match="license[@xlink:href]" mode="access-indicators">
+		<ai:license_ref><xsl:value-of select="@xlink:href"/></ai:license_ref>
+	</xsl:template>
+	<xsl:template match="*" mode="access-indicators" priority="-1"/>
 
 	<!-- fundref -->
 	<!-- http://help.crossref.org/fundref -->
@@ -796,65 +887,42 @@
 
 	<!-- full-text URLs -->
 	<!-- http://tdmsupport.crossref.org/full-text-uris-technical-details/ -->
-	<xsl:template name="tdm">
-		<collection property="text-mining">
-			<item>
-				<resource content_version="vor" mime_type="application/pdf">
-					<xsl:choose>
-						<xsl:when test="ends-with($url,'/')">
-							<xsl:value-of select="concat(substring($url,1,string-length($url)-1), '.pdf')"/>
-						</xsl:when>
-						<xsl:otherwise>
-							<xsl:value-of select="concat($url, '.pdf')"/>
-						</xsl:otherwise>
-					</xsl:choose>
-				</resource>
-			</item>
-			<item>
-				<resource content_version="vor" mime_type="application/xml">
-					<xsl:choose>
-						<xsl:when test="ends-with($url,'/')">
-							<xsl:value-of select="concat(substring($url,1,string-length($url)-1), '.xml')"/>
-						</xsl:when>
-						<xsl:otherwise>
-							<xsl:value-of select="concat($url, '.xml')"/>
-						</xsl:otherwise>
-					</xsl:choose>
-				</resource>
-			</item>
-			<item>
-				<resource content_version="vor" mime_type="text/html">
-					<xsl:choose>
-						<xsl:when test="ends-with($url,'/')">
-							<xsl:value-of select="concat(substring($url,1,string-length($url)-1), '.html')"/>
-						</xsl:when>
-						<xsl:otherwise>
-							<xsl:value-of select="concat($url, '.html')"/>
-						</xsl:otherwise>
-					</xsl:choose>
-				</resource>
-			</item>
-		</collection>
-	</xsl:template>
+	<xsl:function name="jatsFn:tdm">
+		<xsl:param name="resource"/>
+		<xsl:variable name="base" as="xs:string"
+					  select="if (ends-with($resource,'/')) then substring($resource,1,string-length($resource)-1) else $resource"/>
+		<xsl:variable name="defaultFormats">pdf,xml,html</xsl:variable>
+		<xsl:variable name="formatsFromMeta" select="$metafile/meta/tdmFormats" as="xs:string?"/>
+		<xsl:variable name="formats" select="tokenize(($formatsFromMeta,$defaultFormats)[1],',')"/>
 
-<!-- crawler full-text URLs for Similarity Check -->
+		<xsl:if test="not(empty($formats))">
+			<collection property="text-mining">
+				<xsl:for-each select="$formats">
+					<item>
+						<resource content_version="vor" mime_type="application/{ . }">
+							<xsl:value-of select="concat($base, '.', . )"/>
+						</resource>
+					</item>
+				</xsl:for-each>
+			</collection>
+		</xsl:if>
+	</xsl:function>
+
+	<!-- crawler full-text URLs for Similarity Check -->
 	<!-- https://support.crossref.org/hc/en-us/articles/215774943-Depositing-as-crawled-URLs-for-Similarity-Check -->
-	<xsl:template name="crawler">
+	<xsl:function name="jatsFn:crawler">
+		<xsl:param name="resource"/>
+		<xsl:variable name="base" as="xs:string"
+					  select="if (ends-with($resource,'/')) then substring($resource,1,string-length($resource)-1) else $resource"/>
+
 		<collection property="crawler-based">
 			<item crawler="iParadigms">
 				<resource>
-					<xsl:choose>
-						<xsl:when test="ends-with($url,'/')">
-							<xsl:value-of select="concat(substring($url,1,string-length($url)-1), '.pdf')"/>
-						</xsl:when>
-						<xsl:otherwise>
-							<xsl:value-of select="concat($url, '.pdf')"/>
-						</xsl:otherwise>
-					</xsl:choose>
+					<xsl:value-of select="concat($base, '.html' )"/>
 				</resource>
 			</item>
 		</collection>
-	</xsl:template>
+	</xsl:function>
 
 	<!-- archive locations -->
 <!--	<xsl:template name="archive-locations">
