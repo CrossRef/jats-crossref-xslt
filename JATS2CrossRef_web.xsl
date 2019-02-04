@@ -152,26 +152,10 @@
 		<abbrev_title><xsl:value-of select="."/></abbrev_title>
 	</xsl:template>
 
-<!-- ========================================================================== -->
-<!-- ISSN                                                                       -->
-<!-- ========================================================================== -->
-<xsl:template match="issn">
-	<xsl:if test="@pub-type='ppub' or @pub-type='pub'">
-		<issn media_type="print">
-			<xsl:apply-templates/>
-		</issn>
-	</xsl:if>
-	<xsl:if test="@pub-type='epub' or @pub-type='epub-ppub'">
-		<issn media_type="electronic">
-			<xsl:apply-templates/>
-		</issn>
-	</xsl:if>
-	<xsl:if test="not(@pub-type)">
-		<issn media_type="print">
-			<xsl:apply-templates/>
-		</issn>
-	</xsl:if>
-</xsl:template>
+	<xsl:template match="issn">
+		<xsl:variable name="media_type" select="if (@pub-type=('epub', 'epub-ppub')) then 'electronic' else 'print'"/>
+		<issn media_type="{$media_type}"><xsl:value-of select="."/></issn>
+	</xsl:template>
 
 <!-- ========================================================================== -->
 <!-- Publication Date                                                           -->
