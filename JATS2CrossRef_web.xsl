@@ -25,7 +25,7 @@
 				xmlns:xlink="http://www.w3.org/1999/xlink" 
 				xmlns:fr="http://www.crossref.org/fundref.xsd"
 				xmlns:ai="http://www.crossref.org/AccessIndicators.xsd"
-				xmlns:jatsFn="http://www.crossref.org/functions/jats"
+        xmlns:jatsFn="http://www.crossref.org/functions/jats"
 				exclude-result-prefixes="xsldoc">
 
 <xsl:output method="xml" 
@@ -217,8 +217,8 @@
 			<xsl:apply-templates select="//article-meta/funding-group[@specific-use = 'Crossref']" mode="fundref"/>
 
 			<!-- license-ref AccessIndicators -->
-			<xsl:apply-templates select="//permissions/license/@xlink:href" mode="access-indicators"/>
-			
+			<xsl:sequence select="jatsFn:accessIndicator((//permissions)[1])"/>
+
 			<!-- archive locations -->
 			<!-- <xsl:call-template name="archive-locations"/> -->
 			
@@ -546,14 +546,32 @@
 	</xsl:template>
 
 	<!-- license URL -->
-	<!-- http://tdmsupport.crossref.org/license-uris-technical-details/ -->
-	<xsl:template match="permissions/license/@xlink:href" mode="access-indicators">
-		<ai:program name="AccessIndicators">
-			<ai:license_ref>
-				<xsl:value-of select="."/>
-			</ai:license_ref>
-		</ai:program>
+	<xsl:function name="jatsFn:accessIndicator" as="element(ai:program)?">
+		<xsl:param name="permissions" as="element()?"/>
+
+		<xsl:variable name="indicators" as="element()*">
+			<xsl:if test="$permissions/license[@license-type=('open-access', 'free')]"><free_to_read/></xsl:if>
+			<xsl:apply-templates select="$permissions/license" mode="access-indicators"/>
+			<xsl:apply-templates select="$metafile/meta/license" mode="fromMeta"/>
+		</xsl:variable>
+
+		<xsl:if test="not(empty($indicators))">
+			<ai:program name="AccessIndicators"><xsl:sequence select="$indicators"/></ai:program>
+		</xsl:if>
+	</xsl:function>
+
+	<xsl:template match="license" mode="fromMeta">
+		<ai:license_ref>
+			<xsl:if test="@applies_to"><xsl:attribute name="applies_to" select="@applies_to"/></xsl:if>
+			<xsl:value-of select="."/>
+		</ai:license_ref>
 	</xsl:template>
+
+	<!-- http://tdmsupport.crossref.org/license-uris-technical-details/ -->
+	<xsl:template match="license[@xlink:href]" mode="access-indicators">
+		<ai:license_ref><xsl:value-of select="@xlink:href"/></ai:license_ref>
+	</xsl:template>
+	<xsl:template match="*" mode="access-indicators" priority="-1"/>
 
 	<!-- fundref -->
 	<!-- http://help.crossref.org/fundref -->
