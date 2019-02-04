@@ -23,18 +23,25 @@
 				xmlns="http://www.crossref.org/schema/4.3.6"
 				xmlns:xsldoc="http://www.bacman.net/XSLdoc" 
 				xmlns:xlink="http://www.w3.org/1999/xlink" 
-                xmlns:fr="http://www.crossref.org/fundref.xsd"
-                xmlns:ai="http://www.crossref.org/AccessIndicators.xsd"
-				xmlns:jatsFn="http://www.crossref.org/functions/jats"
+				xmlns:fr="http://www.crossref.org/fundref.xsd"
+				xmlns:ai="http://www.crossref.org/AccessIndicators.xsd"
+        xmlns:jatsFn="http://www.crossref.org/functions/jats"
 				exclude-result-prefixes="xsldoc">
 
 <xsl:output method="xml" 
             indent="yes" 
             encoding="UTF-8"/>
 
-<xsl:param name="meta" as="xs:string" required="yes"/>
-<!-- <xsl:variable name="metafile" select="parse-xml($meta)"/> -->  <!-- use this for command line testing/requires saxon 9.3 or greater -->
-<xsl:variable name="metafile" select="document($meta)"/>    <!-- use this for systemp processing/works with 8.5.1 curently in CS  -->
+	<!-- One of these two fields must be populated -->
+	<xsl:param name="metaContents" as="node()*" />
+	<xsl:param name="meta" as="xs:string" select="''"/>
+	<xsl:variable name="metafile">
+		<xsl:if test="empty($metaContents) and $meta=''">
+			<xsl:message terminate="yes">Must specify meta information - either as a nodeset in 'metaContents' or as a filename via 'meta'</xsl:message>
+		</xsl:if>
+		<xsl:sequence select="if (not(empty($metaContents))) then $metaContents else document($meta)"/>
+	</xsl:variable>
+
 <xsl:variable name="date" select="adjust-date-to-timezone(current-date(), ())"/>
 <xsl:variable name="time" select="format-time(current-time(),'[H01][m01][s01]')"/>
 <xsl:variable name="tempdatetime" select="concat($date,'',$time)"/>
@@ -82,226 +89,90 @@
 <!-- ========================================================================== -->
 <!-- Front Matter Element                                                       -->
 <!-- ========================================================================== -->
-<xsl:template match="front">
-	<doi_batch_id>
-		<xsl:choose>
-			<xsl:when test="article-meta/article-id[@pub-id-type='art-access-id']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type = 'art-access-id']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='publisher-id']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type = 'publisher-id']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='doi']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='doi']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='medline']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='medline']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='pii']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='pii']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='sici']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='sici']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='pmid']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='pmid']"/>
-			</xsl:when>
-			<xsl:when test="article-meta/article-id[@pub-id-type='other']">
-				<xsl:apply-templates select="article-meta/article-id[@pub-id-type='other']"/>
-			</xsl:when>
-                        <xsl:when test="$metafile/meta/article_id">
-                                <xsl:apply-templates select="$metafile/meta/article_id"/>
-                        </xsl:when>
-			<xsl:otherwise>
-				<xsl:comment>No article-id has been entered by user</xsl:comment>
-			</xsl:otherwise>
-		</xsl:choose>
-	</doi_batch_id>
-	<timestamp>
-		<xsl:value-of select="$datetime"/>
-	</timestamp>
-	<depositor>
-		<depositor_name>
-			<xsl:choose>
-				<xsl:when test="//journal-meta/publisher">
-					<xsl:apply-templates select="//journal-meta/publisher/publisher-name"/>
-				</xsl:when>
-				<xsl:otherwise>
-					<xsl:comment>Publisher's Name not found in the input file</xsl:comment>
-				</xsl:otherwise>
-			</xsl:choose>
-		</depositor_name>
-  <email_address>
-			<xsl:choose>
-				<xsl:when test="$metafile/meta/email_address">
-					<xsl:apply-templates select="$metafile/meta/email_address"/>
-				</xsl:when>
-				<xsl:otherwise>
-					<xsl:comment>NO e-mail address has been entered by the user</xsl:comment>
-				</xsl:otherwise>
-			</xsl:choose>
+	<xsl:template match="front">
+		<xsl:variable name="noIdComment"><xsl:comment>No article-id has been entered by user</xsl:comment></xsl:variable>
+		<xsl:variable name="noPublisherNameComment"><xsl:comment>Publisher's Name not found in the input file</xsl:comment></xsl:variable>
+		<xsl:variable name="noEmailAddressComment"><xsl:comment>NO e-mail address has been entered by the user</xsl:comment></xsl:variable>
+
+		<doi_batch_id>
+			<xsl:sequence select="($metafile/meta/article_id, jatsFn:findDoiBatchId(article-meta/article-id), $noIdComment)[1]" />
+		</doi_batch_id>
+		<timestamp>
+			<xsl:value-of select="$datetime"/>
+		</timestamp>
+		<depositor>
+			<depositor_name>
+				<xsl:sequence select="(//journal-meta/publisher/publisher-name/string(), $noPublisherNameComment)[1]"/>
+			</depositor_name>
+			<email_address>
+				<xsl:sequence select="($metafile/meta/email_address/string(), $noEmailAddressComment)[1]"/>
 			</email_address>
-	</depositor>
-	<registrant>
-		<xsl:choose>
-		<xsl:when test="$metafile/meta/depositor">
-				<xsl:apply-templates select="$metafile/meta/depositor"/>
-			</xsl:when>
-			<xsl:when test="//journal-meta/publisher">
-				<xsl:apply-templates select="//journal-meta/publisher/publisher-name"/>
-			</xsl:when>
-			<xsl:otherwise>
-				<xsl:comment>Publisher's name not found in the input file</xsl:comment>
-			</xsl:otherwise>
-		</xsl:choose>
-	</registrant>
-</xsl:template>
+		</depositor>
+		<registrant>
+			<xsl:sequence select="($metafile/meta/depositor/string(), //journal-meta/publisher/publisher-name/string(), $noPublisherNameComment)[1]"/>
+		</registrant>
+	</xsl:template>
+
+	<xsl:function name="jatsFn:findDoiBatchId" as="xs:string?">
+		<xsl:param name="candidateIdElements" as="element()*"/>
+		<xsl:variable name="candidateIds" select="($candidateIdElements[@pub-id-type='art-access-id']
+												  ,$candidateIdElements[@pub-id-type='publisher-id']
+												  ,$candidateIdElements[@pub-id-type='doi']
+												  ,$candidateIdElements[@pub-id-type='medline']
+												  ,$candidateIdElements[@pub-id-type='pii']
+												  ,$candidateIdElements[@pub-id-type='sici']
+												  ,$candidateIdElements[@pub-id-type='pmid']
+												  ,$candidateIdElements[@pub-id-type='other'])"/>
+		<xsl:sequence select="$candidateIds[1]"/>
+	</xsl:function>
 
 <!-- ========================================================================== -->
 <!-- Journal Metadata Element                                                   -->
 <!-- ========================================================================== -->
-<xsl:template match="journal-meta">
-	<journal_metadata language="en">
-		<xsl:choose>
-			<xsl:when test="journal-title-group/journal-title">
-				<full_title>
-					<xsl:value-of select="journal-title-group/journal-title"/>
-				</full_title>
-			</xsl:when>
-			<xsl:when test="journal-title">
-				<full_title>
-					<xsl:value-of select="journal-title"/>
-				</full_title>
-			</xsl:when>
-			<xsl:when test="journal-id">
-				<full_title>
-					<xsl:value-of select="journal-id"/>
-				</full_title>
-				</xsl:when>
-			<xsl:otherwise>
-				<full_title>
-					<xsl:message terminate="yes">Journal full title is not available in the Input file</xsl:message>
-				</full_title>
-			</xsl:otherwise>
-		</xsl:choose>
-		<xsl:choose>
-			<xsl:when test="abbrev-journal-title">
-				<abbrev_title>
-					<xsl:value-of select="abbrev-journal-title"/>
-				</abbrev_title>
-			</xsl:when>
-		</xsl:choose>
-		<xsl:choose>
-			<xsl:when test="issn">
-				<xsl:apply-templates select="issn"/>
-			</xsl:when>
-			<xsl:otherwise>
-                            <xsl:message terminate="yes">ISSN is not available in the Input file</xsl:message>
-			</xsl:otherwise>
-		</xsl:choose>
-		<xsl:if test="../article-meta/article-id[@pub-id-type='coden']">
-			<coden>
-				<xsl:value-of select="../article-meta/article-id[@pub-id-type='coden']"/>
-			</coden>
-		</xsl:if>
-	</journal_metadata>
-</xsl:template>
+	<xsl:template match="journal-meta">
+		<journal_metadata language="en">
+			<xsl:variable name="fullTitle" as="xs:string?" select="(journal-title-group/journal-title, journal-title, journal-id)[1]" />
+			<xsl:if test="not($fullTitle)"><xsl:message terminate="yes">Journal full title is not available in the Input file</xsl:message></xsl:if>
+			<full_title><xsl:value-of select="$fullTitle"/></full_title>
 
-<!-- ========================================================================== -->
-<!-- ISSN                                                                       -->
-<!-- ========================================================================== -->
-<xsl:template match="issn">
-	<xsl:if test="@pub-type='ppub' or @pub-type='pub'">
-		<issn media_type="print">
-			<xsl:apply-templates/>
-		</issn>
-	</xsl:if>
-	<xsl:if test="@pub-type='epub' or @pub-type='epub-ppub'">
-		<issn media_type="electronic">
-			<xsl:apply-templates/>
-		</issn>
-	</xsl:if>
-	<xsl:if test="not(@pub-type)">
-		<issn media_type="print">
-			<xsl:apply-templates/>
-		</issn>
-	</xsl:if>
-</xsl:template>
+			<xsl:apply-templates select="(journal-title-group/abbrev-journal-title | abbrev-journal-title)[1]"/>
+
+			<xsl:if test="not(issn)"><xsl:message terminate="yes">ISSN is not available in the Input file</xsl:message></xsl:if>
+			<xsl:apply-templates select="issn"/>
+
+			<xsl:if test="../article-meta/article-id[@pub-id-type='coden']">
+				<coden>
+					<xsl:value-of select="../article-meta/article-id[@pub-id-type='coden']"/>
+				</coden>
+			</xsl:if>
+		</journal_metadata>
+	</xsl:template>
+
+	<xsl:template match="abbrev-journal-title">
+		<abbrev_title><xsl:value-of select="."/></abbrev_title>
+	</xsl:template>
+
+	<xsl:template match="issn">
+		<xsl:variable name="media_type" select="if (@pub-type=('epub', 'epub-ppub')) then 'electronic' else 'print'"/>
+		<issn media_type="{$media_type}"><xsl:value-of select="."/></issn>
+	</xsl:template>
 
 <!-- ========================================================================== -->
 <!-- Publication Date                                                           -->
 <!-- ========================================================================== -->
-<xsl:template match="pub-date">
-	<xsl:if test="@pub-type='ppub' or @pub-type='pub'">
-		<publication_date media_type="print">
-			<xsl:if test="month">
-				<month>
-					<xsl:apply-templates select="month"/>
-				</month>
-			</xsl:if>
-			<xsl:if test="day">
-				<day>
-					<xsl:apply-templates select="day"/>
-				</day>
-			</xsl:if>
-			<year>
-				<xsl:apply-templates select="year"/>
-			</year>
+
+	<xsl:template match="pub-date">
+		<xsl:variable name="mediaType" select="if (@pub-type=('epub', 'epub-ppub')) then 'online' else 'print'"/>
+		<publication_date media_type="{ $mediaType }">
+			<xsl:apply-templates select="month"/>
+			<xsl:apply-templates select="day"/>
+			<xsl:apply-templates select="year"/>
 		</publication_date>
-	</xsl:if>
-	<xsl:if test="@pub-type='epub' or @pub-type='epub-ppub'">
-		<publication_date media_type="online">
-			<xsl:if test="month">
-				<month>
-					<xsl:apply-templates select="month"/>
-				</month>
-			</xsl:if>
-			<xsl:if test="day">
-				<day>
-					<xsl:apply-templates select="day"/>
-				</day>
-			</xsl:if>
-			<year>
-				<xsl:apply-templates select="year"/>
-			</year>
-		</publication_date>
-	</xsl:if>
-	<xsl:if test="not(@pub-type)">
-		<publication_date media_type="print">
-			<xsl:if test="month">
-				<month>
-					<xsl:apply-templates select="month"/>
-				</month>
-			</xsl:if>
-			<xsl:if test="day">
-				<day>
-					<xsl:apply-templates select="day"/>
-				</day>
-			</xsl:if>
-			<year>
-				<xsl:apply-templates select="year"/>
-			</year>
-		</publication_date>
-	</xsl:if>
-		<xsl:if
-			test="not(@pub-type = 'epub' or @pub-type = 'epub-ppub' or @pub-type = 'ppub' or @pub-type = 'pub')">
-		<publication_date media_type="print">
-			<xsl:if test="month">
-				<month>
-					<xsl:apply-templates select="month"/>
-				</month>
-			</xsl:if>
-			<xsl:if test="day">
-				<day>
-					<xsl:apply-templates select="day"/>
-				</day>
-			</xsl:if>
-			<year>
-				<xsl:apply-templates select="year"/>
-			</year>
-		</publication_date>
-	</xsl:if>
-</xsl:template>
+	</xsl:template>
+
+	<xsl:template match="month"><month><xsl:value-of select="."/></month></xsl:template>
+	<xsl:template match="day"><day><xsl:value-of select="."/></day></xsl:template>
+	<xsl:template match="year"><year><xsl:value-of select="."/></year></xsl:template>
 
 <!-- ========================================================================== -->
 <!-- Volume/Issue                                                               -->
@@ -389,83 +260,38 @@
 	<!-- ========================================================================== -->
 	<!-- Article Contributors                                                       -->
 	<!-- ========================================================================== -->
-	<xsl:template match="//article-meta/contrib-group">
-		
-		<xsl:if test="contrib">
-			<contributors>
-				<xsl:apply-templates select="contrib"/>
-			</contributors>
+	<xsl:template match="//article-meta/contrib-group[contrib]">
+		<contributors><xsl:apply-templates select="contrib"/></contributors>
+	</xsl:template>
+
+	<xsl:template match="contrib[name or name-alternatives or string-name]">
+		<person_name sequence="{ if (position() eq 1) then 'first' else 'additional' }" contributor_role="{ @contrib-type }">
+			<xsl:apply-templates select="(name, string-name, name-alternatives/name, name-alternatives/string-name)[1]"/>
+
+			<xsl:if test="contrib-id[@contrib-id-type='orcid']">
+				<ORCID>
+					<xsl:apply-templates select="contrib-id"/>
+				</ORCID>
+			</xsl:if>
+		</person_name>
+
+		<xsl:if test="collab">
+			<organization sequence="{ if (position() eq 1) then 'first' else 'additional' }" contributor_role="author">
+				<xsl:apply-templates select="collab"/>
+			</organization>
 		</xsl:if>
 	</xsl:template>
-	
-	<xsl:template match="contrib">
-		<xsl:if test="name">
-			<xsl:if test="position() = 1">
-				<person_name sequence="first" contributor_role="author">
-					<xsl:apply-templates select="name"/>
-					<!--<xsl:if test="xref[@ref-type='aff' and @rid]">
-				<xsl:call-template name="multi-ref">
-					<xsl:with-param name="tokens" select="xref[@ref-type='aff']/@rid"/>
-				</xsl:call-template>
-			</xsl:if>-->
-					<xsl:if test="contrib-id[@contrib-id-type='orcid']">
-						<ORCID>
-							<xsl:apply-templates select="contrib-id"/>
-						</ORCID>
-					</xsl:if>
-					
-				</person_name>
-			</xsl:if>
-			<xsl:if test="position() &gt; 1">
-				<person_name sequence="additional" contributor_role="author">
-					<xsl:apply-templates select="name"/>
-					<!--<xsl:if test="xref[@ref-type='aff' and @rid]">
-				<xsl:call-template name="multi-ref">
-					<xsl:with-param name="tokens" select="xref[@ref-type='aff']/@rid"/>
-				</xsl:call-template>
-			</xsl:if>-->
-					
-					<xsl:if test="contrib-id[@contrib-id-type='orcid']">
-						<ORCID>
-							<xsl:apply-templates select="contrib-id"/>
-						</ORCID>
-					</xsl:if>
-					
-				</person_name>
-			</xsl:if>
-			
-			<xsl:if test="collab">
-				<xsl:if test="position() = 1">
-					<organization sequence="first" contributor_role="author">
-						<xsl:apply-templates select="collab"/>
-					</organization>
-				</xsl:if>
-				<xsl:if test="position() &gt; 1">
-					<organization sequence="additional" contributor_role="author">
-						<xsl:apply-templates select="name"/>
-					</organization>
-				</xsl:if>
-			</xsl:if>
-		</xsl:if>
+
+	<xsl:template match="contrib-group//name">
+		<xsl:apply-templates select="given-names"/>
+		<xsl:apply-templates select="surname"/>
+		<xsl:apply-templates select="suffix"/>
 	</xsl:template>
-	
-	<xsl:template match="contrib-group/contrib/name">
-		<xsl:if test="given-names">
-			<given_name>
-				<xsl:apply-templates select="given-names"/>
-			</given_name>
-		</xsl:if>
-		<surname>
-			<xsl:apply-templates select="surname"/>
-		</surname>
-		<xsl:if test="suffix">
-			<suffix>
-				<xsl:apply-templates select="suffix"/>
-			</suffix>
-		</xsl:if>
-		
-	</xsl:template>
-	
+
+	<xsl:template match="contrib-group//given-names"><given_name><xsl:apply-templates/></given_name></xsl:template>
+	<xsl:template match="contrib-group//surname"><surname><xsl:apply-templates/></surname></xsl:template>
+	<xsl:template match="contrib-group//suffix"><suffix><xsl:apply-templates/></suffix></xsl:template>
+
 	<xsl:template match="contrib-group/contrib/collab">
 		<xsl:if test="collab">
 			<organization>
