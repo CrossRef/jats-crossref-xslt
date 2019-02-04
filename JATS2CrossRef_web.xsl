@@ -395,83 +395,38 @@
 	<!-- ========================================================================== -->
 	<!-- Article Contributors                                                       -->
 	<!-- ========================================================================== -->
-	<xsl:template match="//article-meta/contrib-group">
-		
-		<xsl:if test="contrib">
-			<contributors>
-				<xsl:apply-templates select="contrib"/>
-			</contributors>
+	<xsl:template match="//article-meta/contrib-group[contrib]">
+		<contributors><xsl:apply-templates select="contrib"/></contributors>
+	</xsl:template>
+
+	<xsl:template match="contrib[name or name-alternatives or string-name]">
+		<person_name sequence="{ if (position() eq 1) then 'first' else 'additional' }" contributor_role="{ @contrib-type }">
+			<xsl:apply-templates select="(name, string-name, name-alternatives/name, name-alternatives/string-name)[1]"/>
+
+			<xsl:if test="contrib-id[@contrib-id-type='orcid']">
+				<ORCID>
+					<xsl:apply-templates select="contrib-id"/>
+				</ORCID>
+			</xsl:if>
+		</person_name>
+
+		<xsl:if test="collab">
+			<organization sequence="{ if (position() eq 1) then 'first' else 'additional' }" contributor_role="author">
+				<xsl:apply-templates select="collab"/>
+			</organization>
 		</xsl:if>
 	</xsl:template>
-	
-	<xsl:template match="contrib">
-		<xsl:if test="name">
-			<xsl:if test="position() = 1">
-				<person_name sequence="first" contributor_role="author">
-					<xsl:apply-templates select="name"/>
-					<!--<xsl:if test="xref[@ref-type='aff' and @rid]">
-				<xsl:call-template name="multi-ref">
-					<xsl:with-param name="tokens" select="xref[@ref-type='aff']/@rid"/>
-				</xsl:call-template>
-			</xsl:if>-->
-					<xsl:if test="contrib-id[@contrib-id-type='orcid']">
-						<ORCID>
-							<xsl:apply-templates select="contrib-id"/>
-						</ORCID>
-					</xsl:if>
-					
-				</person_name>
-			</xsl:if>
-			<xsl:if test="position() &gt; 1">
-				<person_name sequence="additional" contributor_role="author">
-					<xsl:apply-templates select="name"/>
-					<!--<xsl:if test="xref[@ref-type='aff' and @rid]">
-				<xsl:call-template name="multi-ref">
-					<xsl:with-param name="tokens" select="xref[@ref-type='aff']/@rid"/>
-				</xsl:call-template>
-			</xsl:if>-->
-					
-					<xsl:if test="contrib-id[@contrib-id-type='orcid']">
-						<ORCID>
-							<xsl:apply-templates select="contrib-id"/>
-						</ORCID>
-					</xsl:if>
-					
-				</person_name>
-			</xsl:if>
-			
-			<xsl:if test="collab">
-				<xsl:if test="position() = 1">
-					<organization sequence="first" contributor_role="author">
-						<xsl:apply-templates select="collab"/>
-					</organization>
-				</xsl:if>
-				<xsl:if test="position() &gt; 1">
-					<organization sequence="additional" contributor_role="author">
-						<xsl:apply-templates select="name"/>
-					</organization>
-				</xsl:if>
-			</xsl:if>
-		</xsl:if>
+
+	<xsl:template match="contrib-group//name">
+		<xsl:apply-templates select="given-names"/>
+		<xsl:apply-templates select="surname"/>
+		<xsl:apply-templates select="suffix"/>
 	</xsl:template>
-	
-	<xsl:template match="contrib-group/contrib/name">
-		<xsl:if test="given-names">
-			<given_name>
-				<xsl:apply-templates select="given-names"/>
-			</given_name>
-		</xsl:if>
-		<surname>
-			<xsl:apply-templates select="surname"/>
-		</surname>
-		<xsl:if test="suffix">
-			<suffix>
-				<xsl:apply-templates select="suffix"/>
-			</suffix>
-		</xsl:if>
-		
-	</xsl:template>
-	
+
+	<xsl:template match="contrib-group//given-names"><given_name><xsl:apply-templates/></given_name></xsl:template>
+	<xsl:template match="contrib-group//surname"><surname><xsl:apply-templates/></surname></xsl:template>
+	<xsl:template match="contrib-group//suffix"><suffix><xsl:apply-templates/></suffix></xsl:template>
+
 	<xsl:template match="contrib-group/contrib/collab">
 		<xsl:if test="collab">
 			<organization>
