@@ -9,7 +9,7 @@
 <!--                                                      						-->
 <!-- ========================================================================== -->
 <!-- Revision log
-  -  10/1/2018   added abstracts, license-ref and funding sections from PeeJ XSL
+  -  10/1/2018   added abstracts, license-ref and funding sections from PeerJ XSL
   -  5/6/16 added ORCID (PDF)	
   -  10/8/15 updated pub-date types, added elocation, udpated to 4.3.6 (PDF)
   -  4/26/13 updated pub-date support (PDF)
@@ -508,7 +508,6 @@
 
 	<!-- =================================================== -->
 
-	<!-- http://help.crossref.org/include-abstracts-in-deposits -->
 	<xsl:template match="element()" mode="abstract">
 		<xsl:element name="jats:{local-name()}" namespace="http://www.ncbi.nlm.nih.gov/JATS1">
 			<!--<xsl:copy-of select="namespace::*"/>-->
@@ -559,7 +558,7 @@
 	<xsl:template match="*" mode="access-indicators" priority="-1"/>
 
 	<!-- fundref -->
-	<!-- http://help.crossref.org/fundref -->
+	
 	<xsl:template match="funding-group" mode="fundref">
 		<fr:program>
 			<xsl:apply-templates select="award-group/funding-source" mode="fundref"/>
@@ -625,7 +624,7 @@
 	</xsl:template>
 
 	<!-- full-text URLs -->
-	<!-- http://tdmsupport.crossref.org/full-text-uris-technical-details/ -->
+	
 	<xsl:function name="jatsFn:tdm">
 		<xsl:param name="resource"/>
 		<xsl:variable name="base" as="xs:string"
