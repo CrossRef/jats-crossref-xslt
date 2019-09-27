@@ -4,6 +4,7 @@ Originally created by Aptara, Technology Group
 Revised by CrossRef to accomodate NISO JATS 1.0
 Improved by Christopher Brown to be compatible with XSLT 1.0 and latest schema
 Change log:
+* 2019-09-27 edited doi_batch field based on crossref's rec (KvF)
 * 2017-07-19 implement support for structured citations (CHB)
 * 2017-07-19 update to crossref4.4.0.xsd (CHB)
 * 2016-12-17 merged with updated NLM.JATS2Crossref.v3.1.xsl from Crossref (CHB)
@@ -30,12 +31,9 @@ Change log:
 
   <xsl:template match="article">
     <doi_batch xmlns="http://www.crossref.org/schema/4.4.0"
-               xmlns:xlink="http://www.w3.org/1999/xlink"
-               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-               xmlns:fr="http://www.crossref.org/fundref.xsd"
-               version="4.4.0"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="4.4.0"
                xsi:schemaLocation="http://www.crossref.org/schema/4.4.0
-                                   https://www.crossref.org/schema/crossref4.4.0.xsd">
+                                   http://www.crossref.org/schemas/crossref4.4.0.xsd">
       <head>
         <xsl:apply-templates select="front"/>
       </head>
@@ -210,11 +208,11 @@ Change log:
         <person_name sequence="first" contributor_role="author">
           <xsl:apply-templates select="name"/>
           <!--
-            <xsl:if test="xref[@ref-type='aff' and @rid]">
+              <xsl:if test="xref[@ref-type='aff' and @rid]">
               <xsl:call-template name="multi-ref">
-                <xsl:with-param name="tokens" select="xref[@ref-type='aff']/@rid"/>
+              <xsl:with-param name="tokens" select="xref[@ref-type='aff']/@rid"/>
               </xsl:call-template>
-            </xsl:if>
+              </xsl:if>
           -->
           <xsl:apply-templates select="contrib-id"/>
         </person_name>
@@ -223,11 +221,11 @@ Change log:
         <person_name sequence="additional" contributor_role="author">
           <xsl:apply-templates select="name"/>
           <!--
-            <xsl:if test="xref[@ref-type='aff' and @rid]">
+              <xsl:if test="xref[@ref-type='aff' and @rid]">
               <xsl:call-template name="multi-ref">
-                <xsl:with-param name="tokens" select="xref[@ref-type='aff']/@rid"/>
+              <xsl:with-param name="tokens" select="xref[@ref-type='aff']/@rid"/>
               </xsl:call-template>
-            </xsl:if>
+              </xsl:if>
           -->
           <xsl:if test="contrib-id[@contrib-id-type='orcid']">
             <ORCID>
@@ -342,8 +340,8 @@ Change log:
 
   <xsl:template name="fundref">
     <!--
-      <fr:program name="fundref">
-      </fr:program>
+        <fr:program name="fundref">
+        </fr:program>
     -->
   </xsl:template>
 
